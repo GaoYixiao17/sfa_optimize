@@ -153,4 +153,5 @@ python3 compare_report.py -o report.md
 | lightning_indexer 编译报缺头文件 | 检查构建树中 `attention/lightning_indexer_v2` 是否存在 (见第 2 步说明) |
 | run 包安装失败 | 单独运行 `bash build_out/<impl>/build_out/run_pkgs/*.run --install-path=...` 看详细日志 |
 | 机器 CANN 是 9.1.0, 能编 9.2.0 源码吗 | `build_ops.sh` 用**本机** CANN 编译 (自动探测 `ASCEND_HOME_PATH`), 9.1.0 下可直接试。若 op_host/kernel 用到 9.2 新 API 会**编译报错** (快速失败, 无副作用); 此时取 ops-transformer **9.1.0** 的三算子基线源码, 按 `OPTIMIZATION_NOTES.md` 移植优化 (改动集中 6 个文件, 均为算法层改动) |
+| 下了 9.2.0 框架, 机器 CANN 9.1.0 不动, 编完能跑吗 | 大概率能: 脚本永远用**本机 CANN** (9.1.0) 的 ccec/头文件编译, 产物即 9.1.0 原生格式, 与运行时同版本, **无二进制跨版本问题**; 9.2.0 框架只贡献构建脚本与源码, 失配面仅在 API 层 (编不过会响亮报错, 无害)。三种结局: ①编过→直接用, 首次加载留意 op 元数据解析; ②挂框架 cmake 层→换 9.1.0 框架; ③挂算子源码层→按 FAQ 上一条移植。**切忌**另装 9.2.0 CANN 编完放 9.1.0 跑 (二进制跨版本才是真坑) |
 | 会替换/影响机器原有算子吗 | **不会写入 CANN 任何原有文件**: 编译/安装产物全在 `build_out/`; 激活 = `opp/vendors/` 下一条软链 + 当前 shell 的 `LD_LIBRARY_PATH` (进程级, 其他终端/用户/业务无感)。`source install_pkg.sh builtin` 删链即恢复原状。注意: 软链存在期间同机其他进程调用**这三个算子**时可能路由到自定义实现 (仅限这三个算子), 测完建议立即切回 builtin |
