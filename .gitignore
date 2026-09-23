@@ -1,0 +1,14 @@
+# 构建产物
+build_input/
+build_out/
+
+# Python
+__pycache__/
+*.pyc
+
+# 基准运行产物
+result_*.json
+ab_*.pt
+prof/
+*_trace.json
+report.md

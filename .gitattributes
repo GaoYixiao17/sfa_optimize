@@ -1,0 +1,6 @@
+# 禁用一切 EOL 转换: 本仓库在 Windows 上编辑、在 Linux (A5) 上使用,
+# .sh / kernel 源码必须保持 LF 字节精确
+* -text
+
+# 二进制
+*.zip binary
