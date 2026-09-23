@@ -207,8 +207,8 @@ blockTable 读按 70–90% 命中率估算再省 ~30 万次。 若 B2 瓶颈坐�
 
 ## 5. 验证方案
 
-1. **编译验证**: A5 服务器上 `scripts/build_ops.sh --impl optimized --framework <ops-transformer 树>`
-   (详见 `BUILD.md`)。 注意 LI v1 的 kernel 通过相对路径
+1. **编译验证**: A5 服务器上 `scripts/build_ops.sh --impl optimized`
+   (构建框架树默认取仓内自带 `ops-transformer/`, 详见 `BUILD.md`)。 注意 LI v1 的 kernel 通过相对路径
    `../../../../lightning_indexer_v2/op_kernel/arch35/...` 引用 v2 的源码,
    两个算子目录必须同时存在于构建树 (build_ops.sh 已保证)。
 2. **正确性 A/B**: `benchmarks/ab_correctness.py` — baseline 与 optimized 各跑一轮
