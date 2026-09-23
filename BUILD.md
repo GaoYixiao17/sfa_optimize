@@ -51,6 +51,30 @@ cann-ops-adv 兼容框架亦可。
 均无法编译 — `install_pkg.sh builtin` 只是对照 CANN 预装算子, 优化代码必须
 经框架编译成 `.run` 包才能生效。
 
+### 在 A5 上如何找到/指定框架树
+
+```bash
+# 找 (A5 上通常只有已安装的 CANN, 源码框架树多半要自己从内网仓拉):
+ls -d ~/ops-transformer* ~/code/* /data/*/ops-transformer* 2>/dev/null
+find ~ /data /work /home -maxdepth 4 -name CMakePresets.json 2>/dev/null
+
+# 从内网仓拉 (分支/tag 选与机器 CANN 匹配的版本):
+git clone -b <版本分支> <内网ops-transformer地址> ~/ops-transformer
+
+# 验证: 根部须同时有 build.sh + CMakePresets.json + cmake/ + attention/
+ls ~/ops-transformer; ls ~/ops-transformer/attention/ | head
+
+# 指定 (三选一):
+bash scripts/build_ops.sh --framework ~/ops-transformer             # ① 显式参数
+OPS_TRANSFORMER_ROOT=~/ops-transformer bash scripts/build_ops.sh   # ② 环境变量
+# ③ 放默认路径 ~/ops-transformer 即免参数
+```
+
+注意:
+- `/usr/local/Ascend/...` 是**已安装的 CANN 二进制**, 不是框架源码树, 不能当 `--framework` 用;
+- build_ops.sh 只**复制**框架树到 `build_out/` 后在副本上编译, 原树 (可为只读/NFS 共享) 不被修改;
+- 机器 CANN 为 9.1.0 时优先取 9.1.0 配套版本的框架树 (见第 5 节 FAQ)。
+
 ## 1. 生成 baseline / optimized 两套源码 overlay
 
 ```bash
