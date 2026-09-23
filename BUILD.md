@@ -18,6 +18,39 @@ which cmake gcc g++                                # 构建工具链
    `CMakePresets.json`, `cmake/`, 算子在 `attention/<op>`)。
    该框架树只从内部源码仓获取, 需使用者自行提供 (三个 zip 只是算子子目录, 不含构建框架)。
 
+### 什么是"完整构建框架树"? 为什么必须要?
+
+本仓库的三个 `ops-transformer-9.2.0-attention-*/` 目录只是**算子源码目录**
+(`attention/<op>` 的内容), 本身无法独立编译:
+
+- 每个算子的 `CMakeLists.txt` 引用的是**仓库级** CMake 函数/变量, 不在这套目录里;
+- AscendC kernel 的编译 (ccec)、host 代码编译、打包成 `.run` (vendors 目录结构)
+  全部由仓库顶层的构建系统驱动。
+
+`ops-transformer` 是一个大型单体源码仓, 顶层结构:
+
+```
+ops-transformer-9.2.0/          ← "完整构建框架树", A5 上需自行提供
+├── build.sh                    ← 构建入口
+├── CMakePresets.json           ← SOC 版本 / CANN 路径预设
+├── cmake/                      ← 全部构建模块
+├── scripts/ ...                ← 打包/公共设施
+└── attention/
+    ├── lightning_indexer/      ← 算子源码住在这里
+    └── ...
+```
+
+**怎么确认手上的是不是**: 目录根部同时有 `build.sh` + `CMakePresets.json` + `cmake/`,
+且存在 `attention/` 目录。**版本须为 9.2.0** (与算子源码及 CANN 9.2.0-beta.2 匹配)。
+获取渠道是内部源码仓 (Gitee 上的 ops-transformer 为内网仓, 外部访问 404);
+cann-ops-adv 兼容框架亦可。
+
+`build_ops.sh --framework` 做的事: 复制整棵框架树到 `build_out/<impl>/framework`,
+再用本仓库的算子目录 (baseline=zip 原始版 / optimized=优化版) **覆盖**
+`attention/<op>` 后调用框架的 `build.sh` 编译。没有框架树则 baseline/optimized
+均无法编译 — `install_pkg.sh builtin` 只是对照 CANN 预装算子, 优化代码必须
+经框架编译成 `.run` 包才能生效。
+
 ## 1. 生成 baseline / optimized 两套源码 overlay
 
 ```bash
