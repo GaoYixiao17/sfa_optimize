@@ -1,0 +1,4 @@
+case_name,expectResult,x1_dtype,x2_dtype,bias_dtype,residual_dtype,gamma_dtype,antiquant_scale_dtype,antiquant_offset_dtype,dequant_scale_dtype,group,reduce_op,is_trans_a,is_trans_b,comm_turn,antiquant_group_size,epsilon,ranksize,expect_y_dtype,expect_norm_dtype
+normal_bf16,SUCCESS,BF16,INT8,INT8,BF16,BF16,,,,group,sum,0,0,0,-1,0.1,8,BF16,BF16
+normal_fp16,SUCCESS,FLOAT16,INT8,INT8,FLOAT16,FLOAT16,,,,group,sum,0,0,0,-1,0.1,8,FLOAT16,FLOAT16
+with_bias_fp16,SUCCESS,FLOAT16,INT8,INT8,FLOAT16,FLOAT16,,,,group,sum,0,0,0,-1,0.1,8,FLOAT16,FLOAT16

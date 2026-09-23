@@ -1,0 +1,10 @@
+case_name,soc,expect_result,x1_shape,x1_dtype,x1_format,x2_shape,x2_dtype,x2_format,bias_shape,bias_dtype,bias_format,allto_all_axes,output_shape,output_dtype,output_format,allto_all_out_shape,allto_all_out_dtype,allto_all_out_format,group,transpose_x1,transpose_x2
+AAMM_A2_succ1,Ascend910B,SUCCESS,256 64,BF16,ND,64 256,BF16,ND,256,FLOAT,ND,-2 -1,256 256,BF16,ND,128 128,BF16,ND,ut_test_allto_all_matmul,0,0
+AAMM_A2_succ2,Ascend910B,SUCCESS,256 64,BF16,NCHW,64 256,BF16,ND,256,FLOAT,ND,-2 -1,256 256,BF16,ND,128 128,BF16,ND,ut_test_allto_all_matmul,0,0
+AAMM_A2_succ3,Ascend910B,SUCCESS,256 64,BF16,ND,64 256,BF16,NCHW,256,FLOAT,ND,-2 -1,256 256,BF16,ND,128 128,BF16,ND,ut_test_allto_all_matmul,0,0
+AAMM_A2_succ4,Ascend910B,SUCCESS,256 64,BF16,ND,64 256,BF16,ND,256,FLOAT,NCHW,-2 -1,256 256,BF16,ND,128 128,BF16,ND,ut_test_allto_all_matmul,0,0
+AAMM_A2_succ5,Ascend910B,SUCCESS,256 64,BF16,ND,64 256,BF16,ND,256,FLOAT,ND,-2 -1,256 256,BF16,NCHW,128 128,BF16,ND,ut_test_allto_all_matmul,0,0
+AAMM_A2_succ6,Ascend910B,SUCCESS,256 64,BF16,ND,64 256,BF16,ND,256,FLOAT,ND,-2 -1,256 256,BF16,ND,128 128,BF16,NCHW,ut_test_allto_all_matmul,0,0
+AAMM_A2_error1,Ascend910B,PARAM_NULLPTR,256 64,BF16,ND,64 256,BF16,ND,256,FLOAT,ND,-2 -1,,BF16,ND,128 128,BF16,ND,ut_test_allto_all_matmul,0,0
+AAMM_A2_null_x1,Ascend910B,PARAM_NULLPTR,,BF16,ND,64 256,BF16,ND,256,FLOAT,ND,-2 -1,256 256,BF16,ND,128 128,BF16,ND,ut_test_allto_all_matmul,0,0
+AAMM_A2_null_x2,Ascend910B,PARAM_NULLPTR,256 64,BF16,ND,,BF16,ND,256,FLOAT,ND,-2 -1,256 256,BF16,ND,128 128,BF16,ND,ut_test_allto_all_matmul,0,0

@@ -1,0 +1,6 @@
+socVersion,caseName,enable,prefix,result,expectOutputShape,hasScale1,x1Shape,x1Dtype,x2Shape,x2Dtype,scale2Shape,scale2Dtype,groupListShape,yRefShape,yRefDtype,scale1Shape,scale1Dtype,groupListType,groupSize
+Ascend950,infer_shape_success_copies_yref_shape,true,infer_shape_success_copies_yref_shape,true,4:96:128,true,96:512,FLOAT8_E5M2,512:128,FLOAT8_E5M2,12:128:2,FLOAT8_E8M0,4,4:96:128,FLOAT,96:12:2,FLOAT8_E8M0,0,0
+Ascend950,infer_shape_fail_when_optional_scale1_missing,true,infer_shape_fail_when_optional_scale1_missing,false,NONE,false,96:512,FLOAT8_E5M2,512:128,FLOAT8_E5M2,12:128:2,FLOAT8_E8M0,4,4:96:128,FLOAT,NONE,FLOAT8_E8M0,0,0
+Ascend950,hif8_infer_shape_success,true,hif8_infer_shape_success,true,4:96:128,true,512:96,HIFLOAT8,512:128,HIFLOAT8,4,FLOAT,4,4:96:128,FLOAT,4,FLOAT,0,0
+Ascend950,hif8_infer_shape_2d_scales,true,hif8_infer_shape_2d_scales,true,4:96:128,true,512:96,HIFLOAT8,512:128,HIFLOAT8,4:1,FLOAT,4,4:96:128,FLOAT,4:1,FLOAT,0,0
+Ascend950,mxfp8_e4m3_infer_shape,true,mxfp8_e4m3_infer_shape,true,4:96:128,true,512:96,FLOAT8_E4M3FN,512:128,FLOAT8_E4M3FN,12:128:2,FLOAT8_E8M0,4,4:96:128,FLOAT,12:96:2,FLOAT8_E8M0,0,0

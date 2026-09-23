@@ -1,0 +1,100 @@
+# DistributeBarrierExtend
+
+## 产品支持情况
+
+| 产品                                                         | 是否支持 |
+| :----------------------------------------------------------- | :------: |
+| <term>Ascend 950PR&950DT系列产品</term>                             |    √     |
+| <term>Atlas A3系列产品</term>       |    ×     |
+| <term>Atlas A2系列产品</term> |    ×     |
+| <term>Atlas 200I/500 A2推理产品</term>                      |    ×     |
+| <term>Atlas推理系列产品</term>                               |    ×     |
+| <term>Atlas训练系列产品</term>                              |    ×     |
+
+## 功能说明
+
+ - 算子功能：完成通信域内的全卡同步，xRef仅用于构建Tensor依赖，接口内不对xRef做任何操作。
+
+    相较于DistributeBarrier算子，该算子变更如下：
+    - 新增`context`入参，存入通信域相关信息；
+    详细说明请参考以下参数说明。
+
+## 参数说明
+
+<table style="undefined;table-layout: fixed; width: 1392px"> <colgroup>
+ <col style="width: 120px">
+ <col style="width: 120px">
+ <col style="width: 160px">
+ <col style="width: 150px">
+ <col style="width: 80px">
+ </colgroup>
+ <thead>
+  <tr>
+   <th>参数名</th>
+   <th>输入/输出</th>
+   <th>描述</th>
+   <th>数据类型</th>
+   <th>数据格式</th>
+  </tr></thead>
+ <tbody>
+  <tr>
+   <td>context</td>
+   <td>输入</td>
+   <td>本卡通信域信息数据。</td>
+   <td>INT32</td>
+   <td>ND</td>
+  </tr>
+  <tr>
+   <td>xRef</td>
+   <td>输入</td>
+   <td>无业务语义，仅用于输入Tensor依赖，接口内不做任何操作。</td>
+   <td>BFLOAT16, FLOAT16、FLOAT32、BOOL、INT8、INT16、INT32、INT64、UINT8、UINT16、UINT32、UINT64、FLOAT8_E5M2、FLOAT8_E4M3FN、FLOAT4_E1M2、FLOAT4_E2M1、HIFLOAT8、INT4</td>
+   <td>ND</td>
+  </tr>
+  <tr>
+   <td>timeOutOptional</td>
+   <td>输入</td>
+   <td>超时时间设置，如果在此时间内无响应，则认为超时。</td>
+   <td>INT32</td>
+   <td>ND</td>
+  </tr>
+  <tr>
+   <td>elasticInfoOptional</td>
+   <td>输入</td>
+   <td>EP通信域动态缩容信息：<br><term>Atlas A2系列产品</term>：不支持，传空指针；<br><term>Atlas A3系列产品</term>：1D Tensor（shape <code>4 + 2 * epWorldSize,</code>），INT32类型，前4位为缩容配置，后2*epWorldSize为rank映射表。</td>
+   <td>INT32</td>
+   <td>ND（支持非连续Tensor）</td>
+  </tr>
+  <tr>
+   <td>group</td>
+   <td>输入</td>
+   <td>通信域名称，进行所有卡同步的通信域。</td>
+   <td>STRING</td>
+   <td>ND</td>
+  </tr>
+  <tr>
+   <td>worldSize</td>
+   <td>输入</td>
+   <td>通信域大小。</td>
+   <td>UINT64</td>
+   <td>ND</td>
+  </tr>
+ </tbody></table>
+
+  - <term>Ascend 950PR&950DT系列产品</term>：timeOutOptional参数里的超时时间单位为us，建议配置5000000us，根据实际环境不同超时时间下限可能不同。
+
+## 约束说明
+
+- 通信域使用约束：
+    - 一个模型中的aclnnDistributeBarrier需要使用单独通信域，该通信域中不允许有其他算子。
+
+- 使用场景说明：
+    - 在需要进行全卡同步的网络模型中调用该算子，可以屏蔽快慢卡引入的性能波动问题，协助分析性能。
+    - 可以连续调用，入图时，需将上个算子的输入、下个算子的输出作为入参传入接口。
+    - 当开启elasticInfo时，要确保Dispatch/Combine也传入了此参数，并且此elasticInfo与Dispatch/Combine中的elasticInfo保持一致。
+
+## 调用说明
+
+| 调用方式  | 样例代码                                  | 说明                                                     |
+| :--------: | :----------------------------------------: | :-------------------------------------------------------: |
+| aclnn接口 | [test_aclnn_distribute_barrier.cpp](../distribute_barrier/examples/test_aclnn_distribute_barrier.cpp) | 通过[aclnnDistributeBarrier](../distribute_barrier/docs/aclnnDistributeBarrier.md)接口方式调用distribute_barrier_extend算子。 |

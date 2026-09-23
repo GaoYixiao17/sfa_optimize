@@ -1,0 +1,30 @@
+{
+    "case_name": "aclnnFusedInferAttentionScoreV3_FIA_DV_Perf_H_CON_FP16_8_8_768_128_bsh_PA",
+    "input_layout": "BSH",
+    "b": 8,
+    "n2": 8,
+    "g": 1,
+    "s1": 1,
+    "s2": 768,
+    "qk_d": 128,
+    "v_d": 128,
+    "rope_d": 0,
+    "kv_storage_mode": "pa_bbh",
+    "q_dtype": "float16",
+    "kv_dtype": "float16",
+    "out_dtype": "float16",
+    "rope_dtype": "float16",
+    "block_size": 128,
+    "act_seq_lens_q": [],
+    "act_seq_lens_kv": [
+        768
+    ],
+    "enable_softmax_lse": false,
+    "enable_mask": false,
+    "mask_shape": [],
+    "sparse_mode": 0,
+    "pre_tokens": 2147483647,
+    "next_tokens": 2147483647,
+    "enable_learnable_sink": false,
+    "inner_precise": 0
+}

@@ -1,0 +1,32 @@
+{
+    "case_name": "aclnnFusedInferAttentionScoreV2_pfa_pangu_xiaoyi_38B_actq_actkv_000008",
+    "input_layout": "BNSD",
+    "b": 1,
+    "n2": 5,
+    "g": 1,
+    "s1": 4096,
+    "s2": 4096,
+    "qk_d": 128,
+    "v_d": 128,
+    "rope_d": 0,
+    "kv_storage_mode": "continue",
+    "q_dtype": "float16",
+    "kv_dtype": "float16",
+    "out_dtype": "float16",
+    "rope_dtype": null,
+    "block_size": 0,
+    "act_seq_lens_q": [
+        3778
+    ],
+    "act_seq_lens_kv": [
+        470
+    ],
+    "enable_softmax_lse": false,
+    "enable_mask": false,
+    "mask_shape": [],
+    "sparse_mode": 0,
+    "pre_tokens": 65536,
+    "next_tokens": 0,
+    "enable_learnable_sink": false,
+    "inner_precise": 0
+}

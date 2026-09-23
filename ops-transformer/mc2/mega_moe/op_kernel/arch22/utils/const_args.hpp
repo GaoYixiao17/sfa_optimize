@@ -1,0 +1,59 @@
+/**
+ * Copyright (c) 2026 Huawei Technologies Co., Ltd.
+ * This program is free software, you can redistribute it and/or modify it under the terms and conditions of
+ * CANN Open Software License Agreement Version 2.0 (the "License").
+ * Please refer to the License for details. You may not use this file except in compliance with the License.
+ * THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND, EITHER EXPRESS OR IMPLIED,
+ * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
+ * See LICENSE in the root of the software repository for the full text of the License.
+ */
+
+/*!
+ * \file const_args.hpp
+ * \brief
+ */
+
+#ifndef CONST_ARGS_HPP
+#define CONST_ARGS_HPP
+constexpr static uint64_t MB_SIZE = 1024 * 1024UL;
+constexpr static int32_t NUMS_PER_FLAG = 16;
+constexpr static int32_t CACHE_LINE = 512;
+constexpr static int32_t RESET_VAL = 0xffff;
+constexpr static int32_t FLAGSTRIDE = 16;
+constexpr static int32_t UB_ALIGN = 32;
+constexpr static int32_t ALIGN_128 = 128;
+constexpr static int32_t ALIGN_512 = 512;
+constexpr uint16_t CROSS_CORE_FLAG_MAX_SET_COUNT = 15;
+constexpr uint32_t MAX_EXPERTS_PER_RANK = 128;
+constexpr uint32_t MAX_RANK_PER_CORE = 32;
+constexpr static uint16_t SYNCFLAGC2V = 9;
+constexpr static uint16_t SYNCFLAGV2C = 10;
+constexpr static uint32_t SERVER_RANK_SIZE_A2 = 8;
+constexpr static uint32_t kMaxDequantSyncGroups = 16;
+constexpr static uint64_t RESERVED_SPACE_SIZE = 10 * 1024 * 1024;
+// 发送侧逐 chunk 的 token 数（A2/A3 发送侧 prologue chunk 语义；A3 kernel 内另有同名 namespace 级定义）
+constexpr static int64_t PERMUTE_CHUNK = 1024;
+// prologue 每核计数区核数上限（host 侧 workspace 须按实际 aivNum 分配且 <= 此值）
+constexpr static int64_t PERMUTE_MAX_CORES = 128;
+// Flag 同步 magic 值（精确匹配，避免上一轮残留误判）
+// 三处同步（SendTokensV3 / RecvTokensV3 / V2 allgather）统一使用该值，需配合
+// ResetTokenPerExpert 每轮清零 flag 区，确保上一轮残留不会撞上本值
+constexpr static int32_t FLAG_VALUE_MAGIC = 123456789; // 0x075BCD15
+// 本 A2/A3 混合核 kernel 中，1 个 AIC（Cube）对应 2 个 AIV（Vector）。
+// 调用处 coreNum 以 AIV 核数计，coreNum / AIV_PER_AIC 得到对应的 AIC 核数。
+constexpr static int32_t AIV_PER_AIC = 2;
+// AIC 内 m 维拆分给两个 subblock 处理
+constexpr static int32_t SUBBLOCK_NUM_PER_AIC = 2;
+// W4 SwiGLU 场景 GMM/Combine 的 M 维展开倍数（gate+up 双行）
+constexpr static uint32_t GATE_UP_ROWS_PER_TOKEN = 2;
+// int4 打包密度：每字节 2 个 nibble
+constexpr static int32_t INT4_NUM_PER_BYTE = 2;
+// icache 预取行数
+constexpr static int32_t ICACHE_PRELOAD_LINES = 8;
+// rdma 描述符区在 UB 中的起始偏移（128KB）
+constexpr static uint32_t RDMA_UB_OFFSET_BYTES = 128 * 1024;
+// MoePermutePrologue UB 流水级数（双缓冲）
+constexpr static uint32_t PROLOGUE_UB_STAGES = 2;
+// GetSumPreRank 每核槽位步长（元素），16 元素 = 64B，避免跨核伪共享
+constexpr static int32_t PRE_SUM_SLOT_STRIDE = 16;
+#endif

@@ -1,0 +1,33 @@
+{
+    "case_name": "aclnnFusedInferAttentionScoreV2_pfa_EDD_unequal_kvunalign_000036",
+    "input_layout": "BNSD",
+    "b": 3,
+    "n2": 8,
+    "g": 1,
+    "s1": 5184,
+    "s2": 77,
+    "qk_d": 64,
+    "v_d": 64,
+    "rope_d": 0,
+    "kv_storage_mode": "continue",
+    "q_dtype": "float16",
+    "kv_dtype": "float16",
+    "out_dtype": "float16",
+    "rope_dtype": null,
+    "block_size": 0,
+    "act_seq_lens_q": [],
+    "act_seq_lens_kv": [],
+    "enable_softmax_lse": false,
+    "enable_mask": true,
+    "mask_shape": [
+        3,
+        1,
+        5184,
+        77
+    ],
+    "sparse_mode": 0,
+    "pre_tokens": 5185,
+    "next_tokens": 78,
+    "enable_learnable_sink": false,
+    "inner_precise": 0
+}

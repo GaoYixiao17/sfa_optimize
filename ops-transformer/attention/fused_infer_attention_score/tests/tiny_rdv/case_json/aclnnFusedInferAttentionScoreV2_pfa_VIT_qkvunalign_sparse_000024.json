@@ -1,0 +1,31 @@
+{
+    "case_name": "aclnnFusedInferAttentionScoreV2_pfa_VIT_qkvunalign_sparse_000024",
+    "input_layout": "BSH",
+    "b": 2,
+    "n2": 2,
+    "g": 1,
+    "s1": 4104,
+    "s2": 4104,
+    "qk_d": 32,
+    "v_d": 32,
+    "rope_d": 0,
+    "kv_storage_mode": "continue",
+    "q_dtype": "float16",
+    "kv_dtype": "float16",
+    "out_dtype": "float16",
+    "rope_dtype": null,
+    "block_size": 0,
+    "act_seq_lens_q": [],
+    "act_seq_lens_kv": [],
+    "enable_softmax_lse": false,
+    "enable_mask": true,
+    "mask_shape": [
+        2048,
+        2048
+    ],
+    "sparse_mode": 3,
+    "pre_tokens": 4105,
+    "next_tokens": 4105,
+    "enable_learnable_sink": false,
+    "inner_precise": 0
+}

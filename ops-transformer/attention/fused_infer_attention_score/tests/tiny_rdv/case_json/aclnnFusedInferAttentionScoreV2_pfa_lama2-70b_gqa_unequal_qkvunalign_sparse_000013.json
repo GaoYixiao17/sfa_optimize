@@ -1,0 +1,32 @@
+{
+    "case_name": "aclnnFusedInferAttentionScoreV2_pfa_lama2-70b_gqa_unequal_qkvunalign_sparse_000013",
+    "input_layout": "BSND",
+    "b": 1,
+    "n2": 1,
+    "g": 8,
+    "s1": 128,
+    "s2": 340,
+    "qk_d": 128,
+    "v_d": 128,
+    "rope_d": 0,
+    "kv_storage_mode": "continue",
+    "q_dtype": "float16",
+    "kv_dtype": "float16",
+    "out_dtype": "float16",
+    "rope_dtype": null,
+    "block_size": 0,
+    "act_seq_lens_q": [],
+    "act_seq_lens_kv": [],
+    "enable_softmax_lse": false,
+    "enable_mask": true,
+    "mask_shape": [
+        1,
+        128,
+        340
+    ],
+    "sparse_mode": 0,
+    "pre_tokens": 64,
+    "next_tokens": 324,
+    "enable_learnable_sink": false,
+    "inner_precise": 0
+}

@@ -1,0 +1,243 @@
+{
+    "op_type": "MoeDistributeCombineSetup",
+    "op_list": [
+        {
+            "bin_filename": "MoeDistributeCombineSetup_ND_ND_BF16_INT8",
+            "inputs": [
+            {
+                "name": "expand_x",
+                "index": 0,
+                "dtype": "bfloat16",
+                "format": "ND",
+                "paramType": "required",
+                "shape": [
+                -2
+                ],
+                "format_match_mode": "FormatAgnostic"
+            },
+            {
+                "name": "expert_ids",
+                "index": 1,
+                "dtype": "int32",
+                "format": "ND",
+                "paramType": "required",
+                "shape": [
+                -2
+                ],
+                "format_match_mode": "FormatAgnostic"
+            },
+            {
+                "name": "assist_info_for_combine",
+                "index": 2,
+                "dtype": "int32",
+                "format": "ND",
+                "paramType": "required",
+                "shape": [
+                -2
+                ],
+                "format_match_mode": "FormatAgnostic"
+            }
+            ],
+            "outputs": [
+            {
+                "name": "quant_expand_x",
+                "index": 0,
+                "dtype": "int8",
+                "format": "ND",
+                "paramType": "required",
+                "shape": [
+                -2
+                ],
+                "format_match_mode": "FormatAgnostic"
+            },
+            {
+                "name": "comm_cmd_info",
+                "index": 1,
+                "dtype": "int32",
+                "format": "ND",
+                "paramType": "required",
+                "shape": [
+                -2
+                ],
+                "format_match_mode": "FormatAgnostic"
+            }
+            ],
+            "attrs": [
+            {
+                "name": "group_ep",
+                "dtype": "string",
+                "value": ""
+            },
+            {
+                "name": "ep_world_size",
+                "dtype": "int",
+                "value": 0
+            },
+            {
+                "name": "ep_rank_id",
+                "dtype": "int",
+                "value": 0
+            },
+            {
+                "name": "moe_expert_num",
+                "dtype": "int",
+                "value": 0
+            },
+            {
+                "name": "expert_shard_type",
+                "dtype": "int",
+                "value": 0
+            },
+            {
+                "name": "shared_expert_num",
+                "dtype": "int",
+                "value": 1
+            },
+            {
+                "name": "shared_expert_rank_num",
+                "dtype": "int",
+                "value": 0
+            },
+            {
+                "name": "global_bs",
+                "dtype": "int",
+                "value": 0
+            },
+            {
+                "name": "comm_quant_mode",
+                "dtype": "int",
+                "value": 0
+            },
+            {
+                "name": "comm_type",
+                "dtype": "int",
+                "value": 0
+            },
+            {
+                "name": "comm_alg",
+                "dtype": "string",
+                "value": ""
+            }
+            ]
+        },
+        {
+            "bin_filename": "MoeDistributeCombineSetup_ND_ND_FP16_INT8",
+            "inputs": [
+            {
+                "name": "expand_x",
+                "index": 0,
+                "dtype": "float16",
+                "format": "ND",
+                "paramType": "required",
+                "shape": [
+                -2
+                ],
+                "format_match_mode": "FormatAgnostic"
+            },
+            {
+                "name": "expert_ids",
+                "index": 1,
+                "dtype": "int32",
+                "format": "ND",
+                "paramType": "required",
+                "shape": [
+                -2
+                ],
+                "format_match_mode": "FormatAgnostic"
+            },
+            {
+                "name": "assist_info_for_combine",
+                "index": 2,
+                "dtype": "int32",
+                "format": "ND",
+                "paramType": "required",
+                "shape": [
+                -2
+                ],
+                "format_match_mode": "FormatAgnostic"
+            }
+            ],
+            "outputs": [
+            {
+                "name": "quant_expand_x",
+                "index": 0,
+                "dtype": "int8",
+                "format": "ND",
+                "paramType": "required",
+                "shape": [
+                -2
+                ],
+                "format_match_mode": "FormatAgnostic"
+            },
+            {
+                "name": "comm_cmd_info",
+                "index": 1,
+                "dtype": "int32",
+                "format": "ND",
+                "paramType": "required",
+                "shape": [
+                -2
+                ],
+                "format_match_mode": "FormatAgnostic"
+            }
+            ],
+            "attrs": [
+            {
+                "name": "group_ep",
+                "dtype": "string",
+                "value": ""
+            },
+            {
+                "name": "ep_world_size",
+                "dtype": "int",
+                "value": 0
+            },
+            {
+                "name": "ep_rank_id",
+                "dtype": "int",
+                "value": 0
+            },
+            {
+                "name": "moe_expert_num",
+                "dtype": "int",
+                "value": 0
+            },
+            {
+                "name": "expert_shard_type",
+                "dtype": "int",
+                "value": 0
+            },
+            {
+                "name": "shared_expert_num",
+                "dtype": "int",
+                "value": 1
+            },
+            {
+                "name": "shared_expert_rank_num",
+                "dtype": "int",
+                "value": 0
+            },
+            {
+                "name": "global_bs",
+                "dtype": "int",
+                "value": 0
+            },
+            {
+                "name": "comm_quant_mode",
+                "dtype": "int",
+                "value": 0
+            },
+            {
+                "name": "comm_type",
+                "dtype": "int",
+                "value": 0
+            },
+            {
+                "name": "comm_alg",
+                "dtype": "string",
+                "value": ""
+            }
+            ]
+        }
+    ]
+}

@@ -1,0 +1,8 @@
+case_name,soc,expect_result,x1_shape,x1_dtype,x1_format,x2_shape,x2_dtype,x2_format,bias_shape,bias_dtype,bias_format,out_shape,out_dtype,out_format,gather_out_shape,gather_out_dtype,gather_out_format,group,gather_index,comm_turn,stream_mode
+FirstApi,Ascend910B,SUCCESS,16 256,FLOAT16,ND,256 16,FLOAT16,ND,32,FLOAT16,ND,16 16,FLOAT16,ND,16 256,FLOAT16,ND,test_all_gather_group,0,8,1
+FirstApi2,Ascend910B,SUCCESS,0 256,FLOAT16,ND,256 16,FLOAT16,ND,32,FLOAT16,ND,0 16,FLOAT16,ND,0 256,FLOAT16,ND,test_all_gather_group,0,8,1
+FirstApi3,Ascend910B,SUCCESS,1 256,FLOAT16,ND,256 1,FLOAT16,ND,1,FLOAT16,ND,1 1,FLOAT16,ND,1 256,FLOAT16,ND,test_all_gather_group,0,8,1
+FirstApi4,Ascend910B,SUCCESS,8 256,FLOAT16,ND,256 1,FLOAT16,ND,1,FLOAT16,ND,8 1,FLOAT16,ND,8 256,FLOAT16,ND,test_all_gather_group,0,8,1
+FirstApi5,Ascend910B,SUCCESS,16 256,FLOAT16,ND,256 16,FLOAT16,ND,256,FLOAT16,ND,16 16,FLOAT16,ND,16 256,FLOAT16,ND,test_all_gather_group,0,8,1
+FirstApiInputFalse,Ascend910B,PARAM_INVALID,16 16,FLOAT16,ND,16 16,FLOAT16,ND,32,FLOAT16,ND,16 16,FLOAT16,ND,16 16,FLOAT16,ND,test_all_gather_group,0,8,1
+FirstApiGatherOutFalse,Ascend910B,PARAM_INVALID,16 32,FLOAT16,ND,32 16,FLOAT16,ND,32,FLOAT16,ND,16 16,FLOAT16,ND,0,FLOAT16,ND,test_all_gather_group,0,8,1

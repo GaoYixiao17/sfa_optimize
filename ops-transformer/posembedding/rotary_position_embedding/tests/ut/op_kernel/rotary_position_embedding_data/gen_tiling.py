@@ -1,0 +1,78 @@
+#!/usr/bin/python3
+# -----------------------------------------------------------------------------------------------------------
+# Copyright (c) 2025 Huawei Technologies Co., Ltd.
+# This program is free software, you can redistribute it and/or modify it under the terms and conditions of
+# CANN Open Software License Agreement Version 2.0 (the "License").
+# Please refer to the License for details. You may not use this file except in compliance with the License.
+# THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND, EITHER EXPRESS OR IMPLIED,
+# INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
+# See LICENSE in the root of the software repository for the full text of the License.
+# -----------------------------------------------------------------------------------------------------------
+import numpy as np
+import sys
+
+# RotaryPositionEmbeddingTilingData layout (105 int64 slots):
+#   RotateMatrixParams:     indices 0-45  (TCubeTiling[25] + 21 uint64)
+#   RotateHalfParams:       indices 46-84 (38 uint64 + 1 uint8 padded = 39 slots)
+#   RopeInterleavedParams:  indices 85-104 (20 uint64)
+
+# [10, 3, 64] bfloat16_t  interleave
+case0_params = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                12, 46, 1, 14, 6, 34, 2, 1, 2, 1, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0]
+
+# bfloat16 rotate_matrix (key 3013)
+case1_params = [274877906945, 549755814016, 274877907072, 549755814016, 549755813952, 4294967424, 4294967297, 1, 0,
+                211106232532992, 32768, 4294967297, 4294967297, 8589934594, 0, 8589934594, 2, 0, 0, 0, 0, 0, 0, 0, 0,
+                1, 1, 1, 16, 1, 196608, 1, 24, 128, 64, 24, 64, 128, 128, 64, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+
+case1_64_params = [274877906945, 549755814016, 274877907072, 549755814016, 549755813952, 4294967424, 4294967297, 1, 16,
+                211106232532992, 32768, 4294967297, 4294967297, 8589934594, 16, 8589934594, 2, 16, 0, 0, 0, 0, 0, 0, 0,
+                1, 1, 1, 16, 1, 196608, 1, 24, 64, 64, 24, 64, 64, 64, 64, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16,
+                16, 16, 16, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+
+case1_32_params = [274877906945, 549755814016, 274877907072, 549755814016, 549755813952, 4294967424, 4294967297, 1, 8,
+                211106232532992, 32768, 4294967297, 4294967297, 8589934594, 8, 8589934594, 2, 8, 0, 0, 0, 0, 0, 0, 0,
+                1, 1, 1, 16, 1, 102400, 1, 24, 32, 2048, 24, 32, 32, 32, 32, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8,
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+
+# [1, 64, 2, 64] "BNSD" float16 rotate_half regular path (key 1032)
+case_rotate_half_fp16_params = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                3, 1, 64, 2, 1, 64, 1, 0, 8192, 1, 2, 64, 32, 32, 64, 1, 64, 84, 5376, 5376, 64, 1, 0, 1,
+                128, 64, 8192, 4096, 64, 64, 0, 1, 0, 1, 128, 64, 64, 64, 0,
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+
+# [1, 64, 2, 64] FullLoadXD small shape path (key 1132 fp16 / 1131 fp32 / 1133 bf16)
+case_fullloadxd_params = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                3, 1, 64, 2, 1, 64, 1, 1, 8192, 1, 2, 64, 32, 32, 64, 1, 64, 0, 0, 0, 4, 0, 16, 16,
+                0, 0, 0, 0, 0, 0, 0, 0, 16, 16, 0, 0, 0, 0, 0,
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+
+params_info = {
+    "case0": case0_params,
+    "case1": case1_params,
+    "case1_64": case1_64_params,
+    "case1_32": case1_32_params,
+    "case_rotate_half_fp16": case_rotate_half_fp16_params,
+    "case_rotate_half_bf16": case_rotate_half_fp16_params,
+    "case_fullloadxd_fp16": case_fullloadxd_params,
+    "case_fullloadxd_fp32": case_fullloadxd_params,
+    "case_fullloadxd_bf16": case_fullloadxd_params,
+}
+
+def main():
+    params_list = params_info[sys.argv[1]]   # python gen_tiling.py case0  sys.argv[1]="case0"
+    base_params = np.array(params_list, dtype=np.int64)
+    tiling_file = open("tiling.bin", "wb")
+    base_params.tofile(tiling_file)
+
+
+if __name__ == '__main__':
+    main()

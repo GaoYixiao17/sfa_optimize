@@ -1,0 +1,30 @@
+{
+    "case_name": "aclnnFusedInferAttentionScoreV2_pfa_llama2-70b_pa_0006",
+    "input_layout": "BNSD",
+    "b": 1,
+    "n2": 1,
+    "g": 8,
+    "s1": 2,
+    "s2": 1725,
+    "qk_d": 128,
+    "v_d": 128,
+    "rope_d": 0,
+    "kv_storage_mode": "pa_bnbd",
+    "q_dtype": "float16",
+    "kv_dtype": "float16",
+    "out_dtype": "float16",
+    "rope_dtype": null,
+    "block_size": 128,
+    "act_seq_lens_q": [],
+    "act_seq_lens_kv": [
+        1725
+    ],
+    "enable_softmax_lse": false,
+    "enable_mask": false,
+    "mask_shape": [],
+    "sparse_mode": 0,
+    "pre_tokens": 65535,
+    "next_tokens": 65535,
+    "enable_learnable_sink": false,
+    "inner_precise": 0
+}

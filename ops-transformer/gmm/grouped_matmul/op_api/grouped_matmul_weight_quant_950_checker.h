@@ -1,0 +1,99 @@
+/**
+ * Copyright (c) 2025 Huawei Technologies Co., Ltd.
+ * This program is free software, you can redistribute it and/or modify it under the terms and conditions of
+ * CANN Open Software License Agreement Version 2.0 (the "License").
+ * Please refer to the License for details. You may not use this file except in compliance with the License.
+ * THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND, EITHER EXPRESS OR IMPLIED,
+ * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
+ * See LICENSE in the root of the software repository for the full text of the License.
+ */
+
+#ifndef OP_API_INC_GROUPED_MATMUL_WEIGHT_QUANT_950_CHECKER_H
+#define OP_API_INC_GROUPED_MATMUL_WEIGHT_QUANT_950_CHECKER_H
+#include "opdev/format_utils.h"
+#include "aclnn_kernels/common/op_error_check.h"
+#include "grouped_matmul_util.h"
+
+namespace gmm {
+class AclnnGroupedMatmulWeightQuantDAV3510Checker {
+public:
+    explicit AclnnGroupedMatmulWeightQuantDAV3510Checker(const GroupedMatmulParams &gmmParams)
+        : gmmParams_(gmmParams) {};
+    ~AclnnGroupedMatmulWeightQuantDAV3510Checker() {};
+    aclnnStatus CheckGroupedMatmulWeightQuantDAV3510();
+
+private:
+    aclnnStatus CheckGroupTypeScenario() const;
+    aclnnStatus CheckUnsupportedApi() const;
+    aclnnStatus CheckGroupListAndSplitItem() const;
+    aclnnStatus CheckAntiQuantParams() const;
+    aclnnStatus CheckQuantParams() const;
+    aclnnStatus CheckYDtype() const;
+    aclnnStatus CheckQuantDtype() const;
+    aclnnStatus CheckBiasDtype();
+
+    aclnnStatus CheckTensorListSize() const;
+    aclnnStatus CheckTensorNotNull(size_t xIdx, size_t yIdx, size_t wIdx) const;
+    aclnnStatus CheckTensorNotNullPtr(const aclTensorList *tensorList, size_t idx, const std::string &tensorType) const;
+    aclnnStatus CheckTensorDtype(const aclTensorList *tensorList, const DataType &tensorDtype, size_t idx,
+                                 const std::string &tensorType) const;
+    aclnnStatus CheckTensorShape(const aclTensorList *tensorList, size_t idx, const std::string &tensorType) const;
+    static aclnnStatus GetExpectedDimNum(const AclnnGroupedMatmulWeightQuantDAV3510Checker &checker,
+                                         const std::string &tensorType, size_t tensorDimNum, size_t &expectedDimNum);
+    static aclnnStatus CheckBatchSizeConsistency(const AclnnGroupedMatmulWeightQuantDAV3510Checker &checker,
+                                                 const op::Shape &tensorShape, const op::Shape &weightShape,
+                                                 const std::string &tensorType);
+    static aclnnStatus CheckNDimConsistency(const AclnnGroupedMatmulWeightQuantDAV3510Checker &checker,
+                                            const op::Shape &tensorShape, const op::Shape &weightShape,
+                                            size_t tensorDimNum, const std::string &tensorType);
+
+    aclnnStatus CheckWeightInnerAxisEven(size_t idx) const;
+    aclnnStatus CheckDimNumAndFormat(size_t xIdx, size_t yIdx, size_t wIdx) const;
+    aclnnStatus CheckInputFormat(size_t xIdx, size_t yIdx) const;
+    aclnnStatus CheckWeightFormat(size_t wIdx) const;
+    aclnnStatus CheckDimNumByGroupType(size_t xIdx, size_t wIdx, size_t xDimNum, size_t weightDimNum) const;
+    aclnnStatus CheckTransposeStatus() const;
+    aclnnStatus CheckDimValue(size_t xIdx, size_t yIdx, size_t wIdx) const;
+    aclnnStatus CheckDimMatching(size_t xIdx, size_t yIdx, size_t wIdx) const;
+    aclnnStatus CheckV1GroupList(size_t idx) const;
+
+    aclnnStatus CheckAntiQuantDtype(size_t idx) const;
+    aclnnStatus CheckAntiQuantShape(size_t idx) const;
+    aclnnStatus CheckAntiQuantTranspose(size_t idx) const;
+    aclnnStatus CheckScaleAndPerTokenScaleShape() const;
+    aclnnStatus CheckS8S4NZScaleShape() const;
+    aclnnStatus CheckS8S4ScaleShape() const;
+    aclnnStatus CheckS8S4GroupListType() const;
+    aclnnStatus CheckS8S4GroupSize(size_t idx) const;
+    static aclnnStatus CheckOptionalListSize(const aclTensorList *optional, const aclTensorList *reference,
+                                             const char *optionalName, const char *referenceName, const char *opName);
+    aclnnStatus CheckGroupSize(size_t idx) const;
+    aclnnStatus CheckDimValueAllOne(const aclTensorList *tensorList, const size_t idx,
+                                    const std::string &paramName) const;
+    aclnnStatus GetDimFromEnd(const aclTensor *tensor, size_t posFromEnd, size_t &out,
+                              const std::string &tensorName) const;
+
+    bool IsA16MxFp4NZ() const;
+    bool IsMxA8W4NZ() const;
+    bool IsA16W8ND() const;
+    bool IsA16F8ND() const;
+    bool IsS8S4NZ() const;
+    bool IsS8S4PseudoQuant() const;
+    bool IsS8S4SpecialWeightFormat() const;
+    bool IsS8S4AsymmetricQuant() const;
+    bool IsA16W4() const;
+    bool IsMultiTensorWeight() const;
+    bool IsA16W4Pergroup(const size_t idx) const;
+
+    std::string GetDataFlowString() const;
+    const char *GetAclnnName() const;
+
+private:
+    GroupedMatmulParams gmmParams_;
+    DataType xDtype_ = ge::DT_UNDEFINED;
+    DataType weightDtype_ = ge::DT_UNDEFINED;
+    DataType biasDtype_ = ge::DT_UNDEFINED;
+    DataType yDtype_ = ge::DT_UNDEFINED;
+};
+} // namespace gmm
+#endif

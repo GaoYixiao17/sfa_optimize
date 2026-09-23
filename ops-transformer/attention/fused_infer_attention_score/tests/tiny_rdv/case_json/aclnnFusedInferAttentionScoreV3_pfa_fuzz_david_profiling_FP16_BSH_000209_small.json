@@ -1,0 +1,34 @@
+{
+    "case_name": "aclnnFusedInferAttentionScoreV3_pfa_fuzz_david_profiling_FP16_BSH_000209_small",
+    "input_layout": "BSH",
+    "b": 2,
+    "n2": 3,
+    "g": 2,
+    "s1": 115,
+    "s2": 115,
+    "qk_d": 192,
+    "v_d": 128,
+    "rope_d": 0,
+    "kv_storage_mode": "continue",
+    "q_dtype": "float16",
+    "kv_dtype": "float16",
+    "out_dtype": "float16",
+    "rope_dtype": "float16",
+    "block_size": 0,
+    "act_seq_lens_q": [
+        69,
+        112
+    ],
+    "act_seq_lens_kv": [
+        40,
+        14
+    ],
+    "enable_softmax_lse": false,
+    "enable_mask": false,
+    "mask_shape": [],
+    "sparse_mode": 0,
+    "pre_tokens": 115,
+    "next_tokens": 115,
+    "enable_learnable_sink": false,
+    "inner_precise": 0
+}

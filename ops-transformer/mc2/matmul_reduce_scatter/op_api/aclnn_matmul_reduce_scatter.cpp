@@ -1,0 +1,264 @@
+/**
+ * Copyright (c) 2025 Huawei Technologies Co., Ltd.
+ * This program is free software, you can redistribute it and/or modify it under the terms and conditions of
+ * CANN Open Software License Agreement Version 2.0 (the "License").
+ * Please refer to the License for details. You may not use this file except in compliance with the License.
+ * THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND, EITHER EXPRESS OR IMPLIED,
+ * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
+ * See LICENSE in the root of the software repository for the full text of the License.
+ */
+
+/*!
+ * \file aclnn_matmul_reduce_scatter.cpp
+ * \brief
+ */
+#include "aclnn_matmul_reduce_scatter.h"
+#include "matmul_reduce_scatter_v2/op_api/aclnn_matmul_reduce_scatter_v2.h"
+#include "securec.h"
+#include "acl/acl.h"
+#include "common/utils/op_mc2.h"
+#include "common/utils/op_mc2_def.h"
+#include "aclnn_kernels/common/op_error_check.h"
+#include "opdev/make_op_executor.h"
+#include "opdev/op_dfx.h"
+#include "opdev/op_executor.h"
+#include "opdev/op_log.h"
+#include "opdev/platform.h"
+#include "op_host/util/op_const_def.h"
+#include "mc2_log_compat.h"
+#include "opdev/common_types.h"
+#include "common/op_host/op_api/mc2_3rd_matmul_util.h"
+#include "common/utils/hccl_util.h"
+#include "common/op_api/mc2_aclnn_util.h"
+#include "aclnnInner_matmul_reduce_scatter.h"
+
+using namespace op;
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+static constexpr int64_t KVALUE_MIN = 256;
+static constexpr int64_t KVALUE_MAX = 65535;
+static constexpr int64_t NUM_ACL_STOP_ON_FAILURE = 1;
+static constexpr size_t TWO_DIMS = 2;
+
+typedef struct {
+    uint32_t id;
+    const char *funcName;
+    bool hasReg;
+} NnopbaseDfxId;
+
+extern "C" uint64_t NnopbaseMsprofSysTime();
+extern "C" void NnopbaseReportApiInfo(const uint64_t beginTime, NnopbaseDfxId &dfxId);
+
+static inline bool IsAscend910A5(void)
+{
+    return op::GetCurrentPlatformInfo().GetCurNpuArch() == Ops::Base::DAV_3510;
+}
+
+static uint8_t GetDebugMode()
+{
+    auto debugModeEnv = getenv("ASCEND_MC2_DEBUG_MODE");
+    uint8_t debugMode = 0;
+    if (debugModeEnv != nullptr) {
+        debugMode = std::atoi(debugModeEnv);
+    }
+    OP_LOGD("Debug mode is %u.", debugMode);
+    return debugMode;
+}
+
+// 检查入参是否为nullptr
+static bool CheckNotNull(const aclTensor *x1, const aclTensor *x2, const aclTensor *output)
+{
+    OP_CHECK_NULL(x1, return false);
+    OP_CHECK_NULL(x2, return false);
+    OP_CHECK_NULL(output, return false);
+    return true;
+}
+// 根据API定义，需要列出所能支持的所有dtype
+static const std::initializer_list<op::DataType> DTYPE_SUPPORT_LIST = {op::DataType::DT_FLOAT16, op::DataType::DT_BF16};
+static bool CheckDtypeValid(const aclTensor *x1, const aclTensor *x2, const aclTensor *bias, const aclTensor *output)
+{
+    // 检查x1、x2、bias、output的数据类型是否在算子的支持列表内
+    OP_CHECK_DTYPE_NOT_SUPPORT(output, DTYPE_SUPPORT_LIST, return false);
+    OP_CHECK_DTYPE_NOT_SUPPORT(x1, DTYPE_SUPPORT_LIST, return false);
+    OP_CHECK_DTYPE_NOT_SUPPORT(x2, DTYPE_SUPPORT_LIST, return false);
+    // 检查bias的数据类型是否在算子的支持列表内
+    if (bias != nullptr) {
+        OP_CHECK_DTYPE_NOT_SUPPORT(bias, DTYPE_SUPPORT_LIST, return false);
+    }
+
+    // 检查x1和output的数据类型是否相同
+    OP_CHECK_DTYPE_NOT_SAME(x1, output, return false);
+    // 检查x1和x2的数据类型是否相同
+    OP_CHECK_DTYPE_NOT_SAME(x1, x2, return false);
+    // 检查output和bias的数据类型是否相同
+    if (bias != nullptr) {
+        OP_CHECK_DTYPE_NOT_SAME(bias, x1, return false);
+    }
+    return true;
+}
+
+static bool CheckNotEmptyTensor(const aclTensor *x1)
+{
+    auto kValue = x1->GetViewShape().GetDim(1);
+    OP_API_CHECK((kValue == 0), {
+        OP_LOGE_FOR_INVALID_VALUE("aclnnMatmulReduceScatterGetWorkspaceSize", "x1 k-dim", "0", "non-zero");
+        return false;
+    });
+    return true;
+}
+
+// 检查传入的reduction数值是否在可选范围内
+static bool CheckAttr(int64_t streamMode)
+{
+    if (streamMode != NUM_ACL_STOP_ON_FAILURE) {
+        OP_LOGE_FOR_INVALID_VALUE("aclnnMatmulReduceScatterGetWorkspaceSize", "streamMode",
+                                  std::to_string(streamMode).c_str(), "1");
+        return false;
+    }
+    return true;
+}
+
+static aclnnStatus CheckParams(const aclTensor *x1, const aclTensor *x2, const aclTensor *bias, int64_t streamMode,
+                               const aclTensor *output)
+{
+    // 1. 检查参数是否为空指针
+    CHECK_RET(CheckNotNull(x1, x2, output), ACLNN_ERR_PARAM_NULLPTR);
+
+    if (bias != nullptr) {
+        OP_LOGW("MatmulReducescatter, The current version does not support the scenario where bias is not 0. "
+                "Features and accuracy are not guaranteed if inputting bias with values other than 0s.");
+    }
+
+    // 2. 检查输入的数据类型是否在API支持的数据类型范围之内，需要根据api定义校验
+    CHECK_RET(CheckDtypeValid(x1, x2, bias, output), ACLNN_ERR_PARAM_INVALID);
+
+    // 3. 检查attr是否符合规则
+    CHECK_RET(CheckAttr(streamMode), ACLNN_ERR_PARAM_INVALID);
+
+    CHECK_RET(CheckNotEmptyTensor(x1), ACLNN_ERR_PARAM_INVALID);
+
+    return ACLNN_SUCCESS;
+}
+
+static bool CheckShape(const aclTensor *x1, const aclTensor *x2, const aclTensor *output, bool isTransA)
+{
+    if (x1->GetViewShape().GetDimNum() != TWO_DIMS) {
+        OP_LOGE_FOR_INVALID_SHAPEDIM_WITH_REASON("aclnnMatmulReduceScatterGetWorkspaceSize", "x1",
+                                                 (std::to_string(x1->GetViewShape().GetDimNum()) + "D").c_str(),
+                                                 "The shape of x1 must be 2D.");
+        return false;
+    }
+    if (x2->GetViewShape().GetDimNum() != TWO_DIMS) {
+        OP_LOGE_FOR_INVALID_SHAPEDIM_WITH_REASON("aclnnMatmulReduceScatterGetWorkspaceSize", "x2",
+                                                 (std::to_string(x2->GetViewShape().GetDimNum()) + "D").c_str(),
+                                                 "The shape of x2 must be 2D.");
+        return false;
+    }
+    OP_API_CHECK(isTransA, {
+        OP_LOGE_FOR_INVALID_VALUE_WITH_REASON("aclnnMatmulReduceScatterGetWorkspaceSize", "x1", "transposed",
+                                              "The value of x1 must not be transposed.");
+        return false;
+    });
+    auto kVal1 = x1->GetViewShape().GetDim(1);
+    auto kVal2 = x2->GetViewShape().GetDim(0);
+    if (GetDebugMode() != 4) { // 4 ONLY_AICPU
+        OP_API_CHECK((kVal1 != kVal2), {
+            OP_LOGE_FOR_INVALID_SHAPE("aclnnMatmulReduceScatterGetWorkspaceSize", "x1/x2",
+                                      (std::string("k=") + std::to_string(kVal1) + "/" + std::to_string(kVal2)).c_str(),
+                                      "equal k values");
+            return false;
+        });
+        OP_API_CHECK((kVal1 >= KVALUE_MAX || kVal1 < KVALUE_MIN), {
+            OP_LOGE_FOR_INVALID_VALUE("aclnnMatmulReduceScatterGetWorkspaceSize", "k-axis",
+                                      std::to_string(kVal1).c_str(), "[256, 65535)");
+            return false;
+        });
+
+        auto nVal2 = output->GetViewShape().GetDim(1);
+        auto nVal1 = x2->GetViewShape().GetDim(1);
+        OP_API_CHECK((nVal1 != nVal2), {
+            OP_LOGE_FOR_INVALID_SHAPE("aclnnMatmulReduceScatterGetWorkspaceSize", "x2/output",
+                                      (std::string("n=") + std::to_string(nVal1) + "/" + std::to_string(nVal2)).c_str(),
+                                      "equal n values");
+            return false;
+        });
+    }
+    return true;
+}
+
+aclnnStatus aclnnMatmulReduceScatterGetWorkspaceSize(const aclTensor *x1, const aclTensor *x2, const aclTensor *bias,
+                                                     const char *group, const char *reduce_op, int64_t commTurn,
+                                                     int64_t streamMode, const aclTensor *output,
+                                                     uint64_t *workspaceSize, aclOpExecutor **executor)
+{
+    uint64_t timeStamp = NnopbaseMsprofSysTime();
+    // 固定写法，参数检查
+    auto retParam = CheckParams(x1, x2, bias, streamMode, output);
+    CHECK_RET(retParam == ACLNN_SUCCESS, retParam);
+    // 处理空tensor
+    if (x1->IsEmpty() || x2->IsEmpty()) {
+        OP_LOGD("MatmulReduceScatter, dealing with empty tensor.");
+        // 固定写法，创建OpExecutor
+        auto uniqueExecutor = CREATE_EXECUTOR();
+        CHECK_RET(uniqueExecutor.get() != nullptr, ACLNN_ERR_INNER_CREATE_EXECUTOR);
+        *workspaceSize = 0;
+        uniqueExecutor.ReleaseTo(executor);
+        return ACLNN_SUCCESS;
+    }
+    OP_LOGD("X1 is %s.", x1->ToString().GetString());
+    OP_LOGD("X2 is %s.", x2->ToString().GetString());
+    OP_LOGD("output is %s.", output->ToString().GetString());
+
+    uint32_t rankSize = 0;
+    bool transposeX1 = Ops::Transformer::IsTransposeLastTwoDims(x1);
+    bool transposeX2 = Ops::Transformer::IsTransposeLastTwoDims(x2);
+    CHECK_RET(CheckShape(x1, x2, output, transposeX1), ACLNN_ERR_PARAM_INVALID);
+    // 【A2】检查x2矩阵非连续合法性
+    if (op::GetCurrentPlatformInfo().GetSocVersion() == SocVersion::ASCEND910B) {
+        if (!Ops::Transformer::IsTransposeLastTwoDims(x2) && !MC2Aclnn::IsTensorContiguous(x2)) {
+            OP_LOGE_FOR_INVALID_VALUE_WITH_REASON("aclnnMatmulReduceScatterGetWorkspaceSize", "x2", "non-contiguous",
+                                                  "x2 without transpose must be contiguous.");
+            return ACLNN_ERR_PARAM_INVALID;
+        }
+    }
+    if (IsAscend910A5()) {
+        const char *commMode = "ai_cpu";
+        return aclnnMatmulReduceScatterV2GetWorkspaceSize(
+            x1, x2, bias, nullptr, nullptr, nullptr, 0, group, reduce_op, commTurn, streamMode, 0, commMode,
+            const_cast<aclTensor *>(output), nullptr, workspaceSize, executor);
+    }
+    aclnnStatus ret = aclnnInnerMatmulReduceScatterGetWorkspaceSize(
+        x1, x2, bias, const_cast<char *>(group), const_cast<char *>(reduce_op), transposeX1, transposeX2, commTurn,
+        rankSize, output, workspaceSize, executor);
+    OP_LOGD("MatmulReduceScatter, aclnnGetWorkspaceSize ret %d.", ret);
+    static NnopbaseDfxId dfxId = {0x60000, __func__, false};
+    NnopbaseReportApiInfo(timeStamp, dfxId);
+    return ret;
+}
+
+aclnnStatus aclnnMatmulReduceScatter(void *workspace, uint64_t workspaceSize, aclOpExecutor *executor,
+                                     aclrtStream stream)
+{
+    if (IsAscend910A5()) {
+        return aclnnMatmulReduceScatterV2(workspace, workspaceSize, executor, stream);
+    }
+    if (workspace == nullptr || workspaceSize == 0UL) {
+        OP_LOGD("Skip the api for empty tensor, workspace size %lu.", workspaceSize);
+        return ACLNN_SUCCESS;
+    }
+    uint64_t timeStamp = NnopbaseMsprofSysTime();
+    auto ret = aclnnInnerMatmulReduceScatter(workspace, workspaceSize, executor, stream);
+    if (ret != 0) {
+        OP_LOGE_LIBOPAPI_REPORT("aclnnMatmulReduceScatter", "MatmulReduceScatter launch task failed.");
+        return ACLNN_ERR_INNER;
+    }
+    static NnopbaseDfxId dfxId = {0x60000, __func__, false};
+    NnopbaseReportApiInfo(timeStamp, dfxId);
+    return ACLNN_SUCCESS;
+}
+
+#ifdef __cplusplus
+}
+#endif

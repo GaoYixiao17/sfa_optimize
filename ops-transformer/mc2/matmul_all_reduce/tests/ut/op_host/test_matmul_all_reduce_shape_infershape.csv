@@ -1,0 +1,10 @@
+case_name,expectResult,x1_shape,x1_dtype,x1_format,x2_shape,x2_dtype,x2_format,bias_shape,bias_dtype,bias_format,x3_shape,x3_dtype,x3_format,antiquant_scale_shape,antiquant_scale_dtype,antiquant_scale_format,antiquant_offset_shape,antiquant_offset_dtype,antiquant_offset_format,dequant_scale_shape,dequant_scale_dtype,dequant_scale_format,pertoken_scale_shape,pertoken_scale_dtype,pertoken_scale_format,comm_quant_scale_1_shape,comm_quant_scale_1_dtype,comm_quant_scale_1_format,comm_quant_scale_2_shape,comm_quant_scale_2_dtype,comm_quant_scale_2_format,out_y_shape,out_y_dtype,out_y_format,group,reduce_op,is_trans_a,is_trans_b,comm_turn,antiquant_group_size,group_size,y_dtype,comm_quant_mode,ranksize
+2dim,SUCCESS,32 64,FLOAT16,ND,64 128,INT32,ND,,,,,,,,,,,,,,,,,,,,,,,,,32 128,FLOAT16,ND,group,sum,0,0,0,0,0,UNDEFINED,0,8
+3dim,SUCCESS,4 8 64,FLOAT16,ND,64 128,INT32,ND,,,,,,,,,,,,,,,,,,,,,,,,,4 8 128,FLOAT16,ND,group,sum,0,0,0,0,0,UNDEFINED,0,8
+invalid_zero_k,SUCCESS,32 0,FLOAT16,ND,0 128,INT32,ND,,,,,,,,,,,,,,,,,,,,,,,,,32 128,FLOAT16,ND,group,sum,0,0,0,0,0,UNDEFINED,0,8
+3dim_quant_v4,SUCCESS,4 8 64,FLOAT16,ND,64 128,INT32,ND,,,,,,,,,,,,,,,,,,,,,,,,,4 8 128,FLOAT16,ND,group,sum,0,0,0,0,0,UNDEFINED,0,8
+add_rms_norm,SUCCESS,4 8 64,FLOAT16,ND,64 128,INT32,ND,128,INT32,ND,4 8 128,INT32,ND,,,,,,,,,,,,,,,,,,,4 8 128,FLOAT16,ND,group,sum,0,0,0,0,0,UNDEFINED,0,8
+invalid_k,FAILED,32 8,FLOAT16,ND,64 128,INT32,ND,,,,,,,,,,,,,,,,,,,,,,,,,0,FLOAT16,ND,group,sum,0,0,0,0,0,UNDEFINED,0,8
+pergroup_scale_valid,SUCCESS,32 1024,FLOAT16,ND,1024 4096,INT8,ND,,,,,,,16 4096,FLOAT16,ND,,,,,,,,,,,,,,,,32 4096,FLOAT16,ND,group,sum,0,0,0,64,0,UNDEFINED,0,8
+pergroup_scale_trans_b,SUCCESS,32 1024,FLOAT16,ND,4096 1024,INT8,ND,,,,,,,4096 16,FLOAT16,ND,,,,,,,,,,,,,,,,32 4096,FLOAT16,ND,group,sum,0,1,0,64,0,UNDEFINED,0,8
+invalid_pergroup_scale,FAILED,32 1024,FLOAT16,ND,1024 4096,INT8,ND,,,,,,,16 2048,FLOAT16,ND,,,,,,,,,,,,,,,,32 4096,FLOAT16,ND,group,sum,0,0,0,64,0,UNDEFINED,0,8

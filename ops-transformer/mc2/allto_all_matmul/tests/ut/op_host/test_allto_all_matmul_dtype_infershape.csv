@@ -1,0 +1,3 @@
+case_name,expectResult,group,world_size,all2all_axes,y_dtype,x1_quant_mode,x2_quant_mode,comm_quant_mode,x1_quant_dtype,comm_quant_dtype,transpose_x1,transpose_x2,group_size,alltoall_out_flag,x1_dtype,x2_dtype,bias_dtype,x1_scale_dtype,x2_scale_dtype,comm_scale_dtype,x1_offset_dtype,x2_offset_dtype,expect_y_dtype,expect_alltoallout_dtype
+a2amm_dtype_infer_normal,SUCCESS,group,8,UNDEFINED,FLOAT16,0,0,0,UNDEFINED,UNDEFINED,0,1,0,0,FLOAT16,INT8,UNDEFINED,UNDEFINED,UNDEFINED,UNDEFINED,UNDEFINED,UNDEFINED,FLOAT16,FLOAT16
+a2amm_dtype_infer_y_dtype_undefined,FAILED,group,8,UNDEFINED,UNDEFINED,0,0,0,UNDEFINED,UNDEFINED,0,1,0,0,FLOAT16,INT8,UNDEFINED,UNDEFINED,UNDEFINED,UNDEFINED,UNDEFINED,UNDEFINED,FLOAT16,FLOAT16

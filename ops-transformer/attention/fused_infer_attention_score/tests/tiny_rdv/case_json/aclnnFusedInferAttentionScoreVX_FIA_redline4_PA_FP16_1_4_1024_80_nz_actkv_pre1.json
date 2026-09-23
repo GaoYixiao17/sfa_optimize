@@ -1,0 +1,30 @@
+{
+    "case_name": "aclnnFusedInferAttentionScoreVX_FIA_redline4_PA_FP16_1_4_1024_80_nz_actkv_pre1",
+    "input_layout": "BNSD",
+    "b": 1,
+    "n2": 4,
+    "g": 1,
+    "s1": 1,
+    "s2": 1024,
+    "qk_d": 80,
+    "v_d": 80,
+    "rope_d": 0,
+    "kv_storage_mode": "pa_nz",
+    "q_dtype": "float16",
+    "kv_dtype": "float16",
+    "out_dtype": "float16",
+    "rope_dtype": "float16",
+    "block_size": 128,
+    "act_seq_lens_q": [],
+    "act_seq_lens_kv": [
+        1024
+    ],
+    "enable_softmax_lse": false,
+    "enable_mask": false,
+    "mask_shape": [],
+    "sparse_mode": 0,
+    "pre_tokens": 2147483647,
+    "next_tokens": 2147483647,
+    "enable_learnable_sink": false,
+    "inner_precise": 1
+}

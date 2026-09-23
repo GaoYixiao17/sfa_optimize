@@ -1,0 +1,51 @@
+{
+    "case_name": "aclnnFusedInferAttentionScoreV3_pfa_david_invalid_FP16_BSND_000005",
+    "input_layout": "BSND",
+    "b": 8,
+    "n2": 16,
+    "g": 1,
+    "s1": 1777,
+    "s2": 1024,
+    "qk_d": 144,
+    "v_d": 144,
+    "rope_d": 0,
+    "kv_storage_mode": "continue",
+    "q_dtype": "float16",
+    "kv_dtype": "float16",
+    "out_dtype": "float16",
+    "rope_dtype": "float16",
+    "block_size": 0,
+    "act_seq_lens_q": [
+        809,
+        809,
+        809,
+        809,
+        809,
+        809,
+        809,
+        809
+    ],
+    "act_seq_lens_kv": [
+        809,
+        809,
+        809,
+        809,
+        809,
+        809,
+        809,
+        809
+    ],
+    "enable_softmax_lse": false,
+    "enable_mask": true,
+    "mask_shape": [
+        1,
+        1,
+        1777,
+        1024
+    ],
+    "sparse_mode": 0,
+    "pre_tokens": 1335,
+    "next_tokens": 1024,
+    "enable_learnable_sink": false,
+    "inner_precise": 2
+}

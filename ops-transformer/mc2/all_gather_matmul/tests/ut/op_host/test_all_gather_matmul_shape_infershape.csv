@@ -1,0 +1,4 @@
+case_name,expectResult,x1_shape,x1_dtype,x1_format,x2_shape,x2_dtype,x2_format,bias_shape,bias_dtype,bias_format,group,is_trans_a,is_trans_b,gather_index,comm_turn,rank_size,is_gather_out,expectOutputShape
+Basic,SUCCESS,8192 12288,FLOAT16,ND,12288 3904,FLOAT16,ND,,,,hcclCom,0,0,0,0,8,0,65536 3904
+EmptyTensorTest,,8192 0,FLOAT16,ND,0 3904,FLOAT16,ND,,,,hcclCom,0,0,0,0,8,0,
+IsGatherOutFalse,SUCCESS,8192 12288,FLOAT16,ND,12288 3904,FLOAT16,ND,,,,hcclCom,0,0,0,0,8,0,65536 3904

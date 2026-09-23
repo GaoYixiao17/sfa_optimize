@@ -1,0 +1,183 @@
+{
+    "op_type": "BandwidthTest",
+    "op_list": [
+        {
+            "bin_filename": "BandwidthTest_ND_ND_FP16_FP16",
+            "inputs": [
+                {
+                    "name": "context",
+                    "index": 0,
+                    "dtype": "int32",
+                    "format": "ND",
+                    "paramType": "required",
+                    "shape": [-1],
+                    "format_match_mode": "FormatAgnostic"
+                },
+                {
+                    "name": "x",
+                    "index": 0,
+                    "dtype": "float16",
+                    "format": "ND",
+                    "paramType": "required",
+                    "shape": [-2],
+                    "format_match_mode": "FormatAgnostic"
+                },
+                {
+                    "name": "dst_rank_id",
+                    "index": 1,
+                    "dtype": "int32",
+                    "format": "ND",
+                    "paramType": "required",
+                    "shape": [-2],
+                    "format_match_mode": "FormatAgnostic"
+                }
+            ],
+            "outputs": [
+                {
+                    "name": "y",
+                    "index": 0,
+                    "dtype": "float16",
+                    "format": "ND",
+                    "paramType": "required",
+                    "shape": [-2],
+                    "format_match_mode": "FormatAgnostic"
+                },
+                {
+                    "name": "receive_cnt",
+                    "index": 1,
+                    "dtype": "int32",
+                    "format": "ND",
+                    "paramType": "required",
+                    "shape": [-2],
+                    "format_match_mode": "FormatAgnostic"
+                }
+            ],
+            "attrs": [
+                {
+                    "name": "group",
+                    "dtype": "string",
+                    "value": ""
+                },
+                {
+                    "name": "world_size",
+                    "dtype": "int",
+                    "value": 0
+                },
+                {
+                    "name": "max_bs",
+                    "dtype": "int",
+                    "value": 0
+                },
+                {
+                    "name": "mode",
+                    "dtype": "int",
+                    "value": 0
+                },
+                {
+                    "name": "ccl_buffer_size",
+                    "dtype": "int",
+                    "value": 0
+                },
+                {
+                    "name": "comm_alg",
+                    "dtype": "string",
+                    "value": ""
+                },
+                {
+                    "name": "aiv_num",
+                    "dtype": "int",
+                    "value": -1
+                }
+            ]
+        },
+        {
+            "bin_filename": "BandwidthTest_ND_ND_BF16_BF16",
+            "inputs": [
+                {
+                    "name": "context",
+                    "index": 0,
+                    "dtype": "int32",
+                    "format": "ND",
+                    "paramType": "required",
+                    "shape": [-1],
+                    "format_match_mode": "FormatAgnostic"
+                },
+                {
+                    "name": "x",
+                    "index": 1,
+                    "dtype": "bfloat16",
+                    "format": "ND",
+                    "paramType": "required",
+                    "shape": [-2],
+                    "format_match_mode": "FormatAgnostic"
+                },
+                {
+                    "name": "dst_rank_id",
+                    "index": 2,
+                    "dtype": "int32",
+                    "format": "ND",
+                    "paramType": "required",
+                    "shape": [-2],
+                    "format_match_mode": "FormatAgnostic"
+                }
+            ],
+            "outputs": [
+                {
+                    "name": "y",
+                    "index": 0,
+                    "dtype": "bfloat16",
+                    "format": "ND",
+                    "paramType": "required",
+                    "shape": [-2],
+                    "format_match_mode": "FormatAgnostic"
+                },
+                {
+                    "name": "receive_cnt",
+                    "index": 1,
+                    "dtype": "int32",
+                    "format": "ND",
+                    "paramType": "required",
+                    "shape": [-2],
+                    "format_match_mode": "FormatAgnostic"
+                }
+            ],
+            "attrs": [
+                {
+                    "name": "group",
+                    "dtype": "string",
+                    "value": ""
+                },
+                {
+                    "name": "world_size",
+                    "dtype": "int",
+                    "value": 0
+                },
+                {
+                    "name": "max_bs",
+                    "dtype": "int",
+                    "value": 0
+                },
+                {
+                    "name": "mode",
+                    "dtype": "int",
+                    "value": 0
+                },
+                {
+                    "name": "ccl_buffer_size",
+                    "dtype": "int",
+                    "value": 0
+                },
+                {
+                    "name": "comm_alg",
+                    "dtype": "string",
+                    "value": ""
+                },
+                {
+                    "name": "aiv_num",
+                    "dtype": "int",
+                    "value": -1
+                }
+            ]
+        }
+    ]
+}

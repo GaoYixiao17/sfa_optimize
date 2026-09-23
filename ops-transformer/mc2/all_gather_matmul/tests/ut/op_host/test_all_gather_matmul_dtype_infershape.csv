@@ -1,0 +1,2 @@
+case_name,expectResult,x1_dtype,x2_dtype,bias_dtype,group,is_trans_a,is_trans_b,gather_index,comm_turn,rank_size,is_gather_out,expect_y_dtype,expect_gather_out_dtype
+InferDatatype,SUCCESS,FLOAT16,FLOAT16,FLOAT16,hcclCom,0,0,0,0,8,1,FLOAT16,FLOAT16

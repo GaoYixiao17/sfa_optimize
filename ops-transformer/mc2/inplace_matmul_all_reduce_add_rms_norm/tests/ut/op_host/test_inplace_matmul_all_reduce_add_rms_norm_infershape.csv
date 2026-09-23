@@ -1,0 +1,11 @@
+case_name,expectResult,x1_shape,x1_dtype,x1_format,x2_shape,x2_dtype,x2_format,bias_shape,bias_dtype,bias_format,residual_shape,residual_dtype,residual_format,gamma_shape,gamma_dtype,gamma_format,antiquant_scale_shape,antiquant_scale_dtype,antiquant_scale_format,antiquant_offset_shape,antiquant_offset_dtype,antiquant_offset_format,dequant_scale_shape,dequant_scale_dtype,dequant_scale_format,group,reduce_op,is_trans_a,is_trans_b,comm_turn,antiquant_group_size,epsilon,ranksize,out_y_shape,out_y_dtype,out_y_format,out_norm_shape,out_norm_dtype,out_norm_format,expect_y_shape,expect_norm_shape
+normal_fp16_2d,SUCCESS,16 32,FLOAT16,ND,32 64,FLOAT16,ND,,,,1 16 64,FLOAT16,ND,64,FLOAT16,ND,,,,,,,,,,group,sum,0,0,0,-1,0.1,8,1 16 64,FLOAT16,ND,1 16 64,FLOAT16,ND,1 16 64,1 16 64
+normal_bf16_2d,SUCCESS,16 32,BF16,ND,32 64,BF16,ND,,,,1 16 64,BF16,ND,64,BF16,ND,,,,,,,,,,group,sum,0,0,0,-1,0.1,8,1 16 64,BF16,ND,1 16 64,BF16,ND,1 16 64,1 16 64
+normal_3d_input,SUCCESS,2 16 32,FLOAT16,ND,32 64,FLOAT16,ND,,,,2 16 64,FLOAT16,ND,64,FLOAT16,ND,,,,,,,,,,group,sum,0,0,0,-1,0.1,8,2 16 64,FLOAT16,ND,2 16 64,FLOAT16,ND,2 16 64,2 16 64
+quant_int8,SUCCESS,16 32,INT8,ND,32 64,INT8,ND,64,INT32,ND,1 16 64,FLOAT16,ND,64,FLOAT16,ND,,,,,,,64,UINT64,ND,group,sum,0,0,0,-1,0.1,8,1 16 64,FLOAT16,ND,1 16 64,FLOAT16,ND,1 16 64,1 16 64
+weight_quant_fp16,SUCCESS,16 32,FLOAT16,ND,32 64,INT8,ND,,,,1 16 64,FLOAT16,ND,64,FLOAT16,ND,32 64,FLOAT16,ND,,,,,,,group,sum,0,0,0,0,0.1,8,1 16 64,FLOAT16,ND,1 16 64,FLOAT16,ND,1 16 64,1 16 64
+invalid_x1_1d,FAILED,32,FLOAT16,ND,32 64,FLOAT16,ND,,,,1 1 64,FLOAT16,ND,64,FLOAT16,ND,,,,,,,,,,group,sum,0,0,0,-1,0.1,8,1 1 64,FLOAT16,ND,1 1 64,FLOAT16,ND,,
+invalid_x2_3d,FAILED,16 32,FLOAT16,ND,1 32 64,FLOAT16,ND,,,,1 16 64,FLOAT16,ND,64,FLOAT16,ND,,,,,,,,,,group,sum,0,0,0,-1,0.1,8,1 16 64,FLOAT16,ND,1 16 64,FLOAT16,ND,,
+trans_a_not_supported,FAILED,16 32,FLOAT16,ND,32 64,FLOAT16,ND,,,,1 16 64,FLOAT16,ND,64,FLOAT16,ND,,,,,,,,,,group,sum,1,0,0,-1,0.1,8,1 16 64,FLOAT16,ND,1 16 64,FLOAT16,ND,,
+residual_not_3d,FAILED,16 32,FLOAT16,ND,32 64,FLOAT16,ND,,,,16 64,FLOAT16,ND,64,FLOAT16,ND,,,,,,,,,,group,sum,0,0,0,-1,0.1,8,16 64,FLOAT16,ND,16 64,FLOAT16,ND,,
+k_zero,FAILED,16 0,FLOAT16,ND,0 64,FLOAT16,ND,,,,1 16 64,FLOAT16,ND,64,FLOAT16,ND,,,,,,,,,,group,sum,0,0,0,-1,0.1,8,1 16 64,FLOAT16,ND,1 16 64,FLOAT16,ND,,

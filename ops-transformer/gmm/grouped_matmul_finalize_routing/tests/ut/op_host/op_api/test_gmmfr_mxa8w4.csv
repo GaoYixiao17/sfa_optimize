@@ -1,0 +1,12 @@
+caseName,platform,enable,m,k,n,e,bs,bsdp,sharedInputOffset,groupListType,hasBias,transposeX2,hasSharedInput,expectRet,comment
+normal_case,Ascend950,true,192,2048,7168,4,24,8,0,1,false,true,false,true,MxA8W4 normal case with transposed weight
+with_bias,Ascend950,true,192,2048,7168,4,24,8,0,1,true,true,false,true,MxA8W4 normal case with bias
+min_k_n,Ascend950,true,192,32,32,4,24,8,0,1,false,true,false,true,Minimum k=32 n=32 boundary test
+max_experts,Ascend950,true,192,2048,7168,1024,24,8,0,1,false,true,false,true,Maximum experts e=1024 boundary test
+single_token,Ascend950,true,1,2048,7168,4,1,1,0,1,false,true,false,true,Single token m=1 boundary test
+cumsum_group_list,Ascend950,true,192,2048,7168,4,24,8,0,0,false,true,false,true,Cumsum mode groupListType=0
+large_k_n,Ascend950,true,256,4096,16384,8,32,8,0,1,false,true,false,true,Large k=4096 n=16384 test
+many_experts,Ascend950,true,512,2048,4096,128,64,16,0,1,false,true,false,true,Medium experts e=128 test
+zero_offset,Ascend950,true,192,2048,7168,4,24,24,0,1,false,true,false,true,Zero offset with full sharedInput
+normal_case_m0,Ascend950,true,0,2048,7168,4,24,8,0,1,false,true,false,true,MxA8W4 normal case m0
+normal_case_n0,Ascend950,true,192,2048,0,4,24,8,0,1,false,true,false,true,MxA8W4 normal case n0

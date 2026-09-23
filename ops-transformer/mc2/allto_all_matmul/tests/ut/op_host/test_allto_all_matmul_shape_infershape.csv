@@ -1,0 +1,3 @@
+case_name,expectResult,group,world_size,all2all_axes,y_dtype,x1_quant_mode,x2_quant_mode,comm_quant_mode,x1_quant_dtype,comm_quant_dtype,transpose_x1,transpose_x2,group_size,alltoall_out_flag,x1_shape,x1_dtype,x1_format,x2_shape,x2_dtype,x2_format,expectOutputShape
+a2amm_shape_infer_normal,SUCCESS,group,8,-2 -1,FLOAT16,3,2,0,UNDEFINED,UNDEFINED,0,1,0,0,32 8,FLOAT16,ND,128 64,INT8,ND,4 128
+a2amm_shape_infer_k1_not_equal_k2_div_rank,FAILED,group,8,-2 -1,FLOAT16,3,2,0,UNDEFINED,UNDEFINED,0,0,0,0,32 10,FLOAT16,ND,64 128,INT8,ND,4 128
