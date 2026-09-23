@@ -16,6 +16,7 @@ ops-transformer-9.2.0-attention-lightning_indexer/       # LI v1 源码 (含优�
 ops-transformer-9.2.0-attention-lightning_indexer_v2/    # LI v2 源码 (含优化)
 ops-transformer-9.2.0-attention-sparse_flash_attention/  # SFA 源码 (含优化)
 ops-transformer-9.2.0-attention-*.zip                    # 原始基线源码 (未修改, baseline 用)
+ops-transformer/                                        # 官方构建框架树 (gitcode 9.2.0 镜像, 编译用)
 analysis/            # 三算子瓶颈分析 + SUMMARY
 benchmarks/          # bench_li / bench_sfa / bench_e2e / ab_correctness / run_all.sh / compare_report
 scripts/             # prepare_sources.sh / build_ops.sh / install_pkg.sh
@@ -26,9 +27,9 @@ BUILD.md               # A5 上编译/安装/切换 baseline vs optimized 完整
 ## 快速开始（A5 服务器）
 
 ```bash
-# 1. 编译两套算子包 (需自行提供 ops-transformer 9.2.0 完整构建框架树, 见 BUILD.md)
+# 1. 编译两套算子包 (构建框架树已内置仓内 ops-transformer/, 见 BUILD.md)
 bash scripts/prepare_sources.sh
-bash scripts/build_ops.sh --framework ~/ops-transformer-9.2.0
+bash scripts/build_ops.sh              # 框架默认取仓内 ops-transformer/
 bash scripts/install_pkg.sh            # 安装
 
 # 2. 对比测试

@@ -4,8 +4,8 @@
 #
 # 前置条件:
 #   1. 已安装 CANN toolkit (Ascend-cann-toolkit 9.x) 且 source set_env.sh
-#   2. 有 ops-transformer(或 cann-ops-adv 兼容) 构建框架源码树:
-#      其根目录含 build.sh / CMakePresets.json / cmake/, 算子位于 attention/<op>
+#   2. 构建框架树: 本仓库已自带 ops-transformer/ (gitcode 官方 9.2.0 镜像),
+#      默认直接使用; 也可用 --framework 指定其他版本树 (根目录含 build.sh/CMakePresets.json/cmake/)
 #   3. 已运行 scripts/prepare_sources.sh 生成 build_input/{baseline,optimized}
 #
 # 用法:
@@ -14,7 +14,8 @@
 #   bash scripts/build_ops.sh --impl optimized --framework ~/ops-transformer-9.2.0
 #
 # 可选参数:
-#   --framework <dir>   构建框架源码树 (默认 $OPS_TRANSFORMER_ROOT 或 ~/ops-transformer)
+#   --framework <dir>   构建框架源码树 (默认: 仓内 ops-transformer/, 缺失时
+#                       依次找 $OPS_TRANSFORMER_ROOT / ~/ops-transformer)
 #   --impl baseline|optimized|both   编译哪套源码 (默认 both)
 #   --soc <soc>         ASCEND_COMPUTE_UNIT (默认 ascend950; A5=Ascend 950PR)
 #   --jobs <n>          并行度
@@ -27,7 +28,12 @@ REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 AB_ROOT="${AB_ROOT:-$REPO_ROOT/build_out}"
 SOC="${SOC:-ascend950}"
 IMPL="both"
-FRAMEWORK="${OPS_TRANSFORMER_ROOT:-$HOME/ops-transformer}"
+# 框架树优先级: OPS_TRANSFORMER_ROOT > 仓内自带 ops-transformer/ > ~/ops-transformer
+if [ -f "$REPO_ROOT/ops-transformer/build.sh" ]; then
+    FRAMEWORK="${OPS_TRANSFORMER_ROOT:-$REPO_ROOT/ops-transformer}"
+else
+    FRAMEWORK="${OPS_TRANSFORMER_ROOT:-$HOME/ops-transformer}"
+fi
 JOBS="$(nproc 2>/dev/null || echo 16)"
 
 while [ $# -gt 0 ]; do

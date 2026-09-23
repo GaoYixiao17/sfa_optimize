@@ -14,9 +14,10 @@ which cmake gcc g++                                # 构建工具链
 
 需要两样东西:
 1. **本仓库** (`op_optimize/`, 含优化后算子源码 + 脚本), 传到 A5 任意目录;
-2. **ops-transformer 9.2.0 完整构建框架源码树** (根目录含 `build.sh`,
-   `CMakePresets.json`, `cmake/`, 算子在 `attention/<op>`)。
-   该框架树只从内部源码仓获取, 需使用者自行提供 (三个 zip 只是算子子目录, 不含构建框架)。
+2. 构建框架源码树 — **本仓库已自带** `ops-transformer/` (gitcode 官方 9.2.0 镜像,
+   commit 3e20cfe0), `build_ops.sh` 默认直接使用, 无需另行获取。
+   如需其他版本 (如 9.1.0 配套): `git clone -b 9.1.0 https://gitcode.com/cann/ops-transformer.git`
+   后用 `--framework` 指定。
 
 ### 什么是"完整构建框架树"? 为什么必须要?
 
@@ -53,8 +54,13 @@ cann-ops-adv 兼容框架亦可。
 
 ### 在 A5 上如何找到/指定框架树
 
+**本仓库已自带 `ops-transformer/` (gitcode 官方 9.2.0 镜像), `build_ops.sh` 默认优先使用它,
+通常无需 `--framework` 参数。** 以下供需要其他版本 (如 9.1.0 配套) 或独立获取时参考:
+
 ```bash
-# 找 (A5 上通常只有已安装的 CANN, 源码框架树多半要自己从内网仓拉):
+# 官方渠道 (国内直连, 无需代理): 按机器 CANN 版本选分支
+git clone -b 9.2.0 https://gitcode.com/cann/ops-transformer.git
+# 机器上搜是否已有:
 ls -d ~/ops-transformer* ~/code/* /data/*/ops-transformer* 2>/dev/null
 find ~ /data /work /home -maxdepth 4 -name CMakePresets.json 2>/dev/null
 
@@ -90,10 +96,10 @@ bash scripts/prepare_sources.sh
 ## 2. 编译两套算子包
 
 ```bash
-bash scripts/build_ops.sh --framework ~/ops-transformer-9.2.0          # 两套都编
+bash scripts/build_ops.sh                       # 两套都编 (框架默认取仓内 ops-transformer/)
 # 或分开编:
-bash scripts/build_ops.sh --impl baseline  --framework ~/ops-transformer-9.2.0
-bash scripts/build_ops.sh --impl optimized --framework ~/ops-transformer-9.2.0
+bash scripts/build_ops.sh --impl baseline
+bash scripts/build_ops.sh --impl optimized
 ```
 
 可选参数: `--soc ascend950` (默认, A5=Ascend 950PR) / `--jobs <n>`。
@@ -154,4 +160,7 @@ python3 compare_report.py -o report.md
 | run 包安装失败 | 单独运行 `bash build_out/<impl>/build_out/run_pkgs/*.run --install-path=...` 看详细日志 |
 | 机器 CANN 是 9.1.0, 能编 9.2.0 源码吗 | `build_ops.sh` 用**本机** CANN 编译 (自动探测 `ASCEND_HOME_PATH`), 9.1.0 下可直接试。若 op_host/kernel 用到 9.2 新 API 会**编译报错** (快速失败, 无副作用); 此时取 ops-transformer **9.1.0** 的三算子基线源码, 按 `OPTIMIZATION_NOTES.md` 移植优化 (改动集中 6 个文件, 均为算法层改动) |
 | 下了 9.2.0 框架, 机器 CANN 9.1.0 不动, 编完能跑吗 | 大概率能: 脚本永远用**本机 CANN** (9.1.0) 的 ccec/头文件编译, 产物即 9.1.0 原生格式, 与运行时同版本, **无二进制跨版本问题**; 9.2.0 框架只贡献构建脚本与源码, 失配面仅在 API 层 (编不过会响亮报错, 无害)。三种结局: ①编过→直接用, 首次加载留意 op 元数据解析; ②挂框架 cmake 层→换 9.1.0 框架; ③挂算子源码层→按 FAQ 上一条移植。**切忌**另装 9.2.0 CANN 编完放 9.1.0 跑 (二进制跨版本才是真坑) |
+| 三算子在 9.1.0 会被版本门槛跳过吗 | 不会 — 三个算子的 CMakeLists 均未调用 `require_cann_version` (无最低 CANN 版本声明), 构建不受该机制影响, 成败取决于真实编译结果 |
+| 构建时下载 opbase/catlass/ops-tensor 失败 | 框架 configure 阶段会从 gitcode.com (国内直连) 拉取第三方依赖, A5 需能访问外网; 失败时查看 `build_out/<impl>/build_out/build.log` 中 GIT_REPOSITORY 地址预先准备 |
+| 仓内框架 (gitcode 9.2.0) 与 zip 基线有差异? | 有: LI v1/v2 各有 7~9 个文件内容不同 (zip=9.2.0-**beta.2** 内部快照, gitcode=9.2.0 正式版), SFA 完全一致 (逐文件哈希验证)。无害 — build_ops.sh 用本仓算子目录**整体覆盖**框架内同名目录, baseline 也仍从 zip 解出, 对照关系不变 |
 | 会替换/影响机器原有算子吗 | **不会写入 CANN 任何原有文件**: 编译/安装产物全在 `build_out/`; 激活 = `opp/vendors/` 下一条软链 + 当前 shell 的 `LD_LIBRARY_PATH` (进程级, 其他终端/用户/业务无感)。`source install_pkg.sh builtin` 删链即恢复原状。注意: 软链存在期间同机其他进程调用**这三个算子**时可能路由到自定义实现 (仅限这三个算子), 测完建议立即切回 builtin |
