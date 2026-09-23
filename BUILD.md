@@ -41,7 +41,7 @@ ops-transformer-9.2.0/          ← "完整构建框架树", A5 上需自行提�
 ```
 
 **怎么确认手上的是不是**: 目录根部同时有 `build.sh` + `CMakePresets.json` + `cmake/`,
-且存在 `attention/` 目录。**版本须为 9.2.0** (与算子源码及 CANN 9.2.0-beta.2 匹配)。
+且存在 `attention/` 目录。**版本优先 9.2.0** (与算子源码同版; 机器 CANN 为 9.1.0 时见第 5 节 FAQ)。
 获取渠道是内部源码仓 (Gitee 上的 ops-transformer 为内网仓, 外部访问 404);
 cann-ops-adv 兼容框架亦可。
 
@@ -128,3 +128,5 @@ python3 compare_report.py -o report.md
 | 找不到构建框架 | `--framework` 必须指向含 `build.sh` 的 ops-transformer 树根 |
 | lightning_indexer 编译报缺头文件 | 检查构建树中 `attention/lightning_indexer_v2` 是否存在 (见第 2 步说明) |
 | run 包安装失败 | 单独运行 `bash build_out/<impl>/build_out/run_pkgs/*.run --install-path=...` 看详细日志 |
+| 机器 CANN 是 9.1.0, 能编 9.2.0 源码吗 | `build_ops.sh` 用**本机** CANN 编译 (自动探测 `ASCEND_HOME_PATH`), 9.1.0 下可直接试。若 op_host/kernel 用到 9.2 新 API 会**编译报错** (快速失败, 无副作用); 此时取 ops-transformer **9.1.0** 的三算子基线源码, 按 `OPTIMIZATION_NOTES.md` 移植优化 (改动集中 6 个文件, 均为算法层改动) |
+| 会替换/影响机器原有算子吗 | **不会写入 CANN 任何原有文件**: 编译/安装产物全在 `build_out/`; 激活 = `opp/vendors/` 下一条软链 + 当前 shell 的 `LD_LIBRARY_PATH` (进程级, 其他终端/用户/业务无感)。`source install_pkg.sh builtin` 删链即恢复原状。注意: 软链存在期间同机其他进程调用**这三个算子**时可能路由到自定义实现 (仅限这三个算子), 测完建议立即切回 builtin |
