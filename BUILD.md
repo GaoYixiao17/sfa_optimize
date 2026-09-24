@@ -159,6 +159,7 @@ python3 compare_report.py -o report.md
 | 计时无差异 | `install_pkg.sh status` 确认软链; 确认 benchmark 是 source 之后的新进程; `ldd` 确认 op_api so 来源 |
 | 找不到构建框架 | `--framework` 必须指向含 `build.sh` + `cmake/` 的 ops-transformer 树根; 仓内自带 `ops-transformer/` 为默认 |
 | 报错"构建框架不完整"或缺 CMakePresets.json | gitcode 公开版框架**没有** CMakePresets.json (它用 `--ops=`/`--soc=`/`--pkg` 参数), 旧版脚本按内网版布局误判 — `git pull` 更新脚本后已自动识别两种风格 |
+| git clone/pull 报 SSL peer certificate / 证书校验失败 | A5 到 github 的 HTTPS 被拦截 (国内常见): `git config --global http.sslVerify false`; 该配置同时覆盖构建期第三方依赖的 git 拉取。正规做法: 环境自签 CA 配 `http.sslCAInfo` |
 | lightning_indexer 编译报缺头文件 | 检查构建树中 `attention/lightning_indexer_v2` 是否存在 (见第 2 步说明) |
 | run 包安装失败 | 单独运行 `bash build_out/<impl>/build_out/run_pkgs/*.run --install-path=...` 看详细日志 |
 | 机器 CANN 是 9.1.0, 能编 9.2.0 源码吗 | `build_ops.sh` 用**本机** CANN 编译 (自动探测 `ASCEND_HOME_PATH`), 9.1.0 下可直接试。若 op_host/kernel 用到 9.2 新 API 会**编译报错** (快速失败, 无副作用); 此时取 ops-transformer **9.1.0** 的三算子基线源码, 按 `OPTIMIZATION_NOTES.md` 移植优化 (改动集中 6 个文件, 均为算法层改动) |
