@@ -150,6 +150,7 @@ private:
     //   - v 减小(新 batch): Duplicate(-1/-inf) 补 [v, state)
     //   - 真实 topk 路径会复用这些 buffer 作 scratch, 使用后置 -1 失效
     // state = 模板当前的有效前缀长度; -1 表示未初始化(需全量重建)
+    // 注: 偏移视图用 operator[] (AscendC 惯用法, 9.1.0/9.2.0 通用); 勿用 operator+ —— 9.1.0 上类型不匹配
     int32_t degenIdxState_ = -1;
     int32_t degenValState_ = -1;
 
@@ -169,12 +170,12 @@ private:
         }
         if (v > degenIdxState_) {
             PipeBarrier<PIPE_V>();
-            AscendC::CreateVecIndex(indicesOutLocal_.ReinterpretCast<int32_t>() + degenIdxState_,
+            AscendC::CreateVecIndex(indicesOutLocal_.ReinterpretCast<int32_t>()[degenIdxState_],
                                     (int32_t)degenIdxState_, v - degenIdxState_);
             PipeBarrier<PIPE_V>();
         } else if (v < degenIdxState_) {
             PipeBarrier<PIPE_V>();
-            AscendC::Duplicate(indicesOutLocal_.ReinterpretCast<int32_t>() + v, (int32_t)-1,
+            AscendC::Duplicate(indicesOutLocal_.ReinterpretCast<int32_t>()[v], (int32_t)-1,
                                degenIdxState_ - v);
             PipeBarrier<PIPE_V>();
         }
@@ -199,7 +200,7 @@ private:
         fillEnd = Min(fillEnd, (int32_t)topkCount_);
         if (fillEnd > v) {
             PipeBarrier<PIPE_V>();
-            AscendC::Duplicate(valueOutLocal_.template ReinterpretCast<uint16_t>() + v, constInfo_.INVALID_VAL,
+            AscendC::Duplicate(valueOutLocal_.template ReinterpretCast<uint16_t>()[v], constInfo_.INVALID_VAL,
                                fillEnd - v);
             PipeBarrier<PIPE_V>();
         }

@@ -170,6 +170,7 @@ private:
     }
 
     // 将 indices 模板 patch 到 (offset, v); 调用前需已 WaitFlag(MTE3_V, TOPK)
+    // 注: 偏移视图用 operator[] (AscendC 惯用法, 9.1.0/9.2.0 通用); 勿用 operator+ —— 9.1.0 上类型不匹配
     __aicore__ inline void PatchDegenIdxTemplate(int32_t v, int32_t outputIdxOffset)
     {
         if (degenIdxState_ < 0 || degenIdxOffset_ != outputIdxOffset) {
@@ -178,12 +179,12 @@ private:
         }
         if (v > degenIdxState_) {
             PipeBarrier<PIPE_V>();
-            AscendC::CreateVecIndex(indicesOutLocal_.ReinterpretCast<int32_t>() + degenIdxState_,
+            AscendC::CreateVecIndex(indicesOutLocal_.ReinterpretCast<int32_t>()[degenIdxState_],
                                     (int32_t)degenIdxOffset_ + degenIdxState_, v - degenIdxState_);
             PipeBarrier<PIPE_V>();
         } else if (v < degenIdxState_) {
             PipeBarrier<PIPE_V>();
-            AscendC::Duplicate(indicesOutLocal_.ReinterpretCast<int32_t>() + v, (int32_t)-1, degenIdxState_ - v);
+            AscendC::Duplicate(indicesOutLocal_.ReinterpretCast<int32_t>()[v], (int32_t)-1, degenIdxState_ - v);
             PipeBarrier<PIPE_V>();
         }
         degenIdxState_ = v;
@@ -212,7 +213,7 @@ private:
         }
         if (fillEnd > v) {
             PipeBarrier<PIPE_V>();
-            AscendC::Duplicate(valueOutLocal_.template ReinterpretCast<uint32_t>() + v, constInfo_.NEG_INF_FLOAT,
+            AscendC::Duplicate(valueOutLocal_.template ReinterpretCast<uint32_t>()[v], constInfo_.NEG_INF_FLOAT,
                                fillEnd - v);
             PipeBarrier<PIPE_V>();
         }
