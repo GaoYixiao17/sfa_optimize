@@ -20,6 +20,9 @@
 #   --soc <soc>         ASCEND_COMPUTE_UNIT (默认 ascend950; A5=Ascend 950PR)
 #   --jobs <n>          并行度
 #
+# 公开版框架行为: 只编三个目标算子 (--ops 过滤); 第三方依赖缓存于
+# build_out/third_party_cache/ (baseline/optimized 共享, 重跑不重复下载编译)
+#
 # 环境变量:
 #   AB_INSECURE_TLS=1   关闭 cmake 侧第三方包下载的 SSL 证书校验
 #                       (网络对 obs.myhuaweicloud.com 拦截/缺 CA 时使用)
@@ -158,15 +161,19 @@ PYEOF
         echo "[info] 公开版框架: SOC/CANN 由 --soc 参数与环境变量传递"
     fi
 
-    # 编译: 按风格调用, 逐算子失败则回退整仓构建
-    mkdir -p "$out"
+    # 编译: 按风格调用
+    # - 公开版: --ops 只编三个算子; 失败直接中止 (不整仓回退——那会编全部算子, 耗时数小时且无意义)
+    # - 第三方依赖缓存指向持久目录: baseline/optimized 共享, 重建框架副本时不重复下载/编译
+    mkdir -p "$out" "$AB_ROOT/third_party_cache"
     OPS_CSV="lightning_indexer,lightning_indexer_v2,sparse_flash_attention"
     (
         cd "$work"
         build_ok=0
         if [ "$BUILD_STYLE" = "public" ]; then
             # 公开版: --ops 选算子, --soc 指定芯片, --pkg 产出 run 包
-            if bash build.sh --pkg --soc="$SOC" --ops="$OPS_CSV" -j"$JOBS" -O3 2>&1 | tee "$out/build.log"; then
+            if bash build.sh --pkg --soc="$SOC" --ops="$OPS_CSV" \
+                    --cann_3rd_lib_path="$AB_ROOT/third_party_cache" \
+                    -j"$JOBS" -O3 2>&1 | tee "$out/build.log"; then
                 build_ok=1
             fi
         else
@@ -175,10 +182,14 @@ PYEOF
             fi
         fi
         if [ "$build_ok" != "1" ]; then
-            echo "[warn] 逐算子构建失败, 尝试整仓构建 (日志: $out/build_full.log, 较慢)"
             if [ "$BUILD_STYLE" = "public" ]; then
-                bash build.sh --pkg --soc="$SOC" -j"$JOBS" -O3 2>&1 | tee "$out/build_full.log"
+                echo "[error] 构建失败, 已中止 (公开版不做整仓回退; 整仓=全量算子构建, 耗时极长)"
+                echo "-------- $out/build.log 末尾 50 行 --------"
+                tail -n 50 "$out/build.log" || true
+                echo "----------------------------------------"
+                exit 1
             else
+                echo "[warn] 逐算子构建失败, 尝试整仓构建 (日志: $out/build_full.log)"
                 bash build.sh 2>&1 | tee "$out/build_full.log"
             fi
         fi

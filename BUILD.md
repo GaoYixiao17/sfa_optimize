@@ -110,7 +110,8 @@ bash scripts/build_ops.sh --impl optimized
 - **自动识别 build.sh 风格**并适配调用:
   公开版 (gitcode, 仓内自带, 无 CMakePresets.json) → `build.sh --pkg --soc=<soc> --ops=<三算子> -j<N> -O3`;
   内网版 (有 CMakePresets.json) → 改写 presets 的 SOC/CANN 后 `build.sh -n <op> ...`;
-- 逐算子构建失败自动回退整仓构建 (较慢);
+- 公开版构建失败**直接中止**并打印 `build.log` 尾部 (不做整仓回退——整仓=全量算子构建, 耗时数小时且无意义);
+- 第三方依赖缓存持久化到 `build_out/third_party_cache/` (`--cann_3rd_lib_path` 重定向; baseline/optimized 共享, 重建框架副本时不重复下载/编译; 预置离线包也放这里);
 - 产物 (`.run` 包; 公开版名为 `cann-ops-transformer-*.run`) 汇总到 `build_out/<impl>/build_out/run_pkgs/`。
 
 > **重要 — LI v1 跨目录依赖**: lightning_indexer 的 arch35 kernel 通过相对路径
@@ -160,7 +161,8 @@ python3 compare_report.py -o report.md
 | 找不到构建框架 | `--framework` 必须指向含 `build.sh` + `cmake/` 的 ops-transformer 树根; 仓内自带 `ops-transformer/` 为默认 |
 | 报错"构建框架不完整"或缺 CMakePresets.json | gitcode 公开版框架**没有** CMakePresets.json (它用 `--ops=`/`--soc=`/`--pkg` 参数), 旧版脚本按内网版布局误判 — `git pull` 更新脚本后已自动识别两种风格 |
 | git clone/pull 报 SSL peer certificate / 证书校验失败 | A5 到 github 的 HTTPS 被拦截 (国内常见): `git config --global http.sslVerify false`; 该配置同时覆盖构建期第三方依赖的 git 拉取。正规做法: 环境自签 CA 配 `http.sslCAInfo` |
-| 构建期下载 makeself/json/eigen 等报 "SSL peer certificate or SSH remote key was not OK" | 这是 **cmake `file(DOWNLOAD)`** 从 `cann-3rd.obs.cn-north-4.myhuaweicloud.com` 拉第三方包的证书校验失败 (git 的 sslVerify 管不到它)。①治本: `apt install ca-certificates && update-ca-certificates`; ②关闭: `AB_INSECURE_TLS=1 bash scripts/build_ops.sh ...` (脚本向框架副本注入 `CMAKE_TLS_VERIFY=OFF`, 覆盖所有 cmake 管理的下载); ③离线旁路 (以 makeself 为例): 预置 `<框架>/third_party/makeself-release-2.5.0.tar.gz` + `third_party/pkg/makeself-2.5.0.patch` 即跳过该下载, 其他包同理 (见 `ops-transformer/build/_deps/cann-cmake-src/third_party/*.cmake` 里的 REQ_URL 与本地缓存路径) |
+| 看到 ffn/moe/mc2 等其他模块在编译 ("像把 CANN 全编一遍") | 旧版脚本在 `--ops` 构建失败后会**整仓回退** (不带 --ops → 全模块全算子 + torch_extension, 数小时) — Ctrl+C 终止, `git pull` 后重跑 (新版失败即中止并打印 build.log 尾部); 真正要修的是 `build.log` 里最初 `--ops` 那次的报错。注意区分: 首次构建编译第三方依赖 (protobuf/abseil/catlass/ops-tensor 等) 属正常, 新版已把缓存持久化到 `build_out/third_party_cache/` |
+| 构建期下载 makeself/json/eigen 等报 "SSL peer certificate or SSH remote key was not OK" | 这是 **cmake `file(DOWNLOAD)`** 从 `cann-3rd.obs.cn-north-4.myhuaweicloud.com` 拉第三方包的证书校验失败 (git 的 sslVerify 管不到它)。①治本: `apt install ca-certificates && update-ca-certificates`; ②关闭: `AB_INSECURE_TLS=1 bash scripts/build_ops.sh ...` (脚本向框架副本注入 `CMAKE_TLS_VERIFY=OFF`, 覆盖所有 cmake 管理的下载); ③离线旁路 (以 makeself 为例): 预置 `build_out/third_party_cache/makeself-release-2.5.0.tar.gz` + `build_out/third_party_cache/pkg/makeself-2.5.0.patch` 即跳过该下载 (手动跑 build.sh 时路径为 `<框架>/third_party/`), 其他包同理 (URL 与缓存路径见 `build/_deps/cann-cmake-src/third_party/*.cmake`) |
 | lightning_indexer 编译报缺头文件 | 检查构建树中 `attention/lightning_indexer_v2` 是否存在 (见第 2 步说明) |
 | run 包安装失败 | 单独运行 `bash build_out/<impl>/build_out/run_pkgs/*.run --install-path=...` 看详细日志 |
 | 机器 CANN 是 9.1.0, 能编 9.2.0 源码吗 | `build_ops.sh` 用**本机** CANN 编译 (自动探测 `ASCEND_HOME_PATH`), 9.1.0 下可直接试。若 op_host/kernel 用到 9.2 新 API 会**编译报错** (快速失败, 无副作用); 此时取 ops-transformer **9.1.0** 的三算子基线源码, 按 `OPTIMIZATION_NOTES.md` 移植优化 (改动集中 6 个文件, 均为算法层改动) |
