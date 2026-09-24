@@ -107,9 +107,11 @@ bash scripts/build_ops.sh --impl optimized
 脚本行为:
 - 每套实现复制一份**干净的框架树**到 `build_out/<impl>/framework/`,
   再用对应 overlay 覆盖 `attention/{lightning_indexer,lightning_indexer_v2,sparse_flash_attention}`;
-- 自动改写 `CMakePresets.json` 的 `ASCEND_COMPUTE_UNIT` / `ASCEND_CANN_PACKAGE_PATH`;
-- 优先逐算子构建 (`build.sh -n <op> ...`), 失败自动回退整仓构建;
-- 产物 (`.run` 包) 汇总到 `build_out/<impl>/build_out/run_pkgs/`。
+- **自动识别 build.sh 风格**并适配调用:
+  公开版 (gitcode, 仓内自带, 无 CMakePresets.json) → `build.sh --pkg --soc=<soc> --ops=<三算子> -j<N> -O3`;
+  内网版 (有 CMakePresets.json) → 改写 presets 的 SOC/CANN 后 `build.sh -n <op> ...`;
+- 逐算子构建失败自动回退整仓构建 (较慢);
+- 产物 (`.run` 包; 公开版名为 `cann-ops-transformer-*.run`) 汇总到 `build_out/<impl>/build_out/run_pkgs/`。
 
 > **重要 — LI v1 跨目录依赖**: lightning_indexer 的 arch35 kernel 通过相对路径
 > `../../../../lightning_indexer_v2/op_kernel/arch35/...` 引用 v2 源码,
@@ -155,7 +157,8 @@ python3 compare_report.py -o report.md
 | 现象 | 排查 |
 |---|---|
 | 计时无差异 | `install_pkg.sh status` 确认软链; 确认 benchmark 是 source 之后的新进程; `ldd` 确认 op_api so 来源 |
-| 找不到构建框架 | `--framework` 必须指向含 `build.sh` 的 ops-transformer 树根 |
+| 找不到构建框架 | `--framework` 必须指向含 `build.sh` + `cmake/` 的 ops-transformer 树根; 仓内自带 `ops-transformer/` 为默认 |
+| 报错"构建框架不完整"或缺 CMakePresets.json | gitcode 公开版框架**没有** CMakePresets.json (它用 `--ops=`/`--soc=`/`--pkg` 参数), 旧版脚本按内网版布局误判 — `git pull` 更新脚本后已自动识别两种风格 |
 | lightning_indexer 编译报缺头文件 | 检查构建树中 `attention/lightning_indexer_v2` 是否存在 (见第 2 步说明) |
 | run 包安装失败 | 单独运行 `bash build_out/<impl>/build_out/run_pkgs/*.run --install-path=...` 看详细日志 |
 | 机器 CANN 是 9.1.0, 能编 9.2.0 源码吗 | `build_ops.sh` 用**本机** CANN 编译 (自动探测 `ASCEND_HOME_PATH`), 9.1.0 下可直接试。若 op_host/kernel 用到 9.2 新 API 会**编译报错** (快速失败, 无副作用); 此时取 ops-transformer **9.1.0** 的三算子基线源码, 按 `OPTIMIZATION_NOTES.md` 移植优化 (改动集中 6 个文件, 均为算法层改动) |

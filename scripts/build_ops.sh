@@ -10,8 +10,8 @@
 #
 # 用法:
 #   bash scripts/prepare_sources.sh
-#   bash scripts/build_ops.sh --impl baseline  --framework ~/ops-transformer-9.2.0
-#   bash scripts/build_ops.sh --impl optimized --framework ~/ops-transformer-9.2.0
+#   bash scripts/build_ops.sh --impl baseline
+#   bash scripts/build_ops.sh --impl optimized
 #
 # 可选参数:
 #   --framework <dir>   构建框架源码树 (默认: 仓内 ops-transformer/, 缺失时
@@ -20,7 +20,8 @@
 #   --soc <soc>         ASCEND_COMPUTE_UNIT (默认 ascend950; A5=Ascend 950PR)
 #   --jobs <n>          并行度
 #
-# 产物: $AB_ROOT/<impl>/build_out/CANN-custom_ops-*.run
+# 产物: $AB_ROOT/<impl>/build_out/run_pkgs/*.run
+#       公开版框架: cann-ops-transformer-*.run; 内网版: CANN-custom_ops-*.run
 # ============================================================================
 set -euo pipefail
 
@@ -60,12 +61,25 @@ if [ -z "${ASCEND_HOME_PATH:-}" ]; then
 fi
 echo "[info] ASCEND_HOME_PATH=$ASCEND_HOME_PATH"
 
-if [ ! -f "$FRAMEWORK/build.sh" ] || [ ! -f "$FRAMEWORK/CMakePresets.json" ]; then
-    echo "[error] 构建框架不完整: $FRAMEWORK (需要 build.sh 与 CMakePresets.json)"
-    echo "        请提供 ops-transformer 9.2.0 源码树, 或 cann-ops-adv 兼容框架,"
-    echo "        并用 --framework 指定路径"
+if [ ! -f "$FRAMEWORK/build.sh" ] || [ ! -d "$FRAMEWORK/cmake" ]; then
+    echo "[error] 构建框架不完整: $FRAMEWORK (需要 build.sh 与 cmake/)"
+    echo "        本仓库自带 ops-transformer/ (gitcode 官方镜像); 或用 --framework 指定其他框架树"
     exit 1
 fi
+
+# 识别 build.sh 风格:
+#   public   — gitcode 公开版: 用 --ops=.../--soc=.../--pkg 参数, 无 CMakePresets.json
+#   internal — 内网版: 用 -n <op> 逐算子, 依赖 CMakePresets.json 传 SOC/CANN
+if grep -q -- '--ops=\*)' "$FRAMEWORK/build.sh" 2>/dev/null; then
+    BUILD_STYLE="public"
+elif [ -f "$FRAMEWORK/CMakePresets.json" ]; then
+    BUILD_STYLE="internal"
+else
+    echo "[error] 无法识别 build.sh 风格: $FRAMEWORK"
+    echo "        (既不支持 --ops= 参数, 也没有 CMakePresets.json)"
+    exit 1
+fi
+echo "[info] build.sh 风格: $BUILD_STYLE"
 
 if [ ! -d "$REPO_ROOT/build_input" ]; then
     echo "[info] 先运行 prepare_sources.sh"
@@ -105,8 +119,9 @@ build_one() {
         fi
     done
 
-    # 配置 SOC 与 CANN 路径 (python 修改 CMakePresets.json, 避免手工编辑)
-    python3 - "$work/CMakePresets.json" "$SOC" "$ASCEND_HOME_PATH" <<'PYEOF'
+    # 配置 SOC 与 CANN 路径 (内网版: python 改写 CMakePresets.json; 公开版: 由 build.sh 参数传递)
+    if [ "$BUILD_STYLE" = "internal" ]; then
+        python3 - "$work/CMakePresets.json" "$SOC" "$ASCEND_HOME_PATH" <<'PYEOF'
 import json, sys
 path, soc, cann = sys.argv[1], sys.argv[2], sys.argv[3]
 with open(path) as f:
@@ -128,23 +143,40 @@ with open(path, "w") as f:
     json.dump(data, f, indent=2)
 print(f"[info] CMakePresets: ASCEND_COMPUTE_UNIT={soc}  CANN={cann}  changed={changed}")
 PYEOF
+    else
+        echo "[info] 公开版框架: SOC/CANN 由 --soc 参数与环境变量传递"
+    fi
 
-    # 编译: 优先逐算子构建 (-n), 失败则回退整仓构建
+    # 编译: 按风格调用, 逐算子失败则回退整仓构建
     mkdir -p "$out"
+    OPS_CSV="lightning_indexer,lightning_indexer_v2,sparse_flash_attention"
     (
         cd "$work"
-        if bash build.sh -n lightning_indexer -n lightning_indexer_v2 -n sparse_flash_attention 2>&1 | tee "$out/build.log"; then
-            :
+        build_ok=0
+        if [ "$BUILD_STYLE" = "public" ]; then
+            # 公开版: --ops 选算子, --soc 指定芯片, --pkg 产出 run 包
+            if bash build.sh --pkg --soc="$SOC" --ops="$OPS_CSV" -j"$JOBS" -O3 2>&1 | tee "$out/build.log"; then
+                build_ok=1
+            fi
         else
-            echo "[warn] 逐算子构建失败, 尝试整仓构建 (日志: $out/build_full.log)"
-            bash build.sh 2>&1 | tee "$out/build_full.log"
+            if bash build.sh -n lightning_indexer -n lightning_indexer_v2 -n sparse_flash_attention 2>&1 | tee "$out/build.log"; then
+                build_ok=1
+            fi
+        fi
+        if [ "$build_ok" != "1" ]; then
+            echo "[warn] 逐算子构建失败, 尝试整仓构建 (日志: $out/build_full.log, 较慢)"
+            if [ "$BUILD_STYLE" = "public" ]; then
+                bash build.sh --pkg --soc="$SOC" -j"$JOBS" -O3 2>&1 | tee "$out/build_full.log"
+            else
+                bash build.sh 2>&1 | tee "$out/build_full.log"
+            fi
         fi
     )
 
     # 收集产物 run 包
     rm -rf "$out/run_pkgs"; mkdir -p "$out/run_pkgs"
     found=0
-    for f in $(find "$work" -name "CANN-custom_ops*.run" -o -name "custom_ops*.run" 2>/dev/null); do
+    for f in $(find "$work" -name "CANN-custom_ops*.run" -o -name "custom_ops*.run" -o -name "cann-ops-transformer*.run" 2>/dev/null); do
         cp "$f" "$out/run_pkgs/"; found=1
         echo "[ok] 产物: $out/run_pkgs/$(basename "$f")"
     done
