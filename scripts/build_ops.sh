@@ -20,6 +20,10 @@
 #   --soc <soc>         ASCEND_COMPUTE_UNIT (默认 ascend950; A5=Ascend 950PR)
 #   --jobs <n>          并行度
 #
+# 环境变量:
+#   AB_INSECURE_TLS=1   关闭 cmake 侧第三方包下载的 SSL 证书校验
+#                       (网络对 obs.myhuaweicloud.com 拦截/缺 CA 时使用)
+#
 # 产物: $AB_ROOT/<impl>/build_out/run_pkgs/*.run
 #       公开版框架: cann-ops-transformer-*.run; 内网版: CANN-custom_ops-*.run
 # ============================================================================
@@ -118,6 +122,13 @@ build_one() {
             echo "[info] overlay: attention/$op  ($impl)"
         fi
     done
+
+    # 可选: 关闭 cmake 侧 HTTPS 下载的证书校验 (makeself/json/eigen 等 OBS 第三方包)
+    # A5 网络对 cann-3rd.obs.cn-north-4.myhuaweicloud.com 证书校验失败时使用
+    if [ "${AB_INSECURE_TLS:-0}" = "1" ] && ! grep -q "CMAKE_TLS_VERIFY" "$work/CMakeLists.txt"; then
+        sed -i '/cmake_minimum_required/a set(CMAKE_TLS_VERIFY OFF CACHE BOOL "" FORCE)' "$work/CMakeLists.txt"
+        echo "[info] AB_INSECURE_TLS=1: 已注入 CMAKE_TLS_VERIFY=OFF (cmake file(DOWNLOAD)/第三方包下载不再校验证书)"
+    fi
 
     # 配置 SOC 与 CANN 路径 (内网版: python 改写 CMakePresets.json; 公开版: 由 build.sh 参数传递)
     if [ "$BUILD_STYLE" = "internal" ]; then
